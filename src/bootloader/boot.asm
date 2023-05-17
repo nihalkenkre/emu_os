@@ -121,7 +121,13 @@ disk_read:
 	mov si, msg_disk_read_error
 	call puts 
 
-	; jmp 0xffff:0				; BIOS starts at ffff:0000
+	mov si, msg_reboot
+	call puts
+
+	mov ah, 0h
+	int 16h
+
+	jmp 0xffff:0				; BIOS starts at ffff:0000
 
 .done:
 	pop di
@@ -148,8 +154,6 @@ main:
 	call print_new_line
 	call puts
 	call print_new_line
-
-
 
 	mov [driveNum], dl
 	mov ax, 1
@@ -185,6 +189,7 @@ print_new_line:
 msg_hello			:db 'Hello World!', 0x0D, 0x0A, 0
 msg_bye				:db 'Bye World!', 0x0D, 0x0A, 0
 msg_disk_read_error	:db 'Read from disk failed!', 0x0D, 0x0A, 0
+msg_reboot			:db 'Press any key to reboot...', 0x0D, 0x0A, 0
 
 times 510-($-$$) db 0
 
