@@ -5,7 +5,7 @@ boot:
 	Jump:			   db 	0xEB, 0x3C, 0x90
     OEMname:           db   "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
     bytesPerSector:    dw   512
-    sectPerCluster:    db   1
+    sectPerCluster:    db   2
     reservedSectors:   dw   1
     numFAT:            db   2
     numRootDirEntries: dw   224
@@ -16,7 +16,7 @@ boot:
     numHeads:          dw   2
     numHiddenSectors:  dd   0
     numSectorsHuge:    dd   0
-    driveNum:          db   0x80
+    driveNum:          db   0
     reserved:          db   0
     signature:         db   0x29
     volumeID:          dd   0x2d7e5a1a
@@ -156,7 +156,7 @@ main:
 	call print_new_line
 
 	mov [driveNum], dl
-	mov ax, 1
+	mov ax, 3
 	mov cl, 1
 	mov bx, 0x7e00
 	call disk_read
