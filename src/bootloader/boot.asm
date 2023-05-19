@@ -1,27 +1,27 @@
 org 0x7C00
 bits 16
 
-boot:
-	Jump:			   db 	0xEB, 0x3C, 0x90
-    OEMname:           db   "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
-    bytesPerSector:    dw   512
-    sectPerCluster:    db   2
-    reservedSectors:   dw   1
-    numFAT:            db   2
-    numRootDirEntries: dw   224
-    numSectors:        dw   2880
-    mediaType:         db   0xf0
-    numFATsectors:     dw   9
-    sectorsPerTrack:   dw   18
-    numHeads:          dw   2
-    numHiddenSectors:  dd   0
-    numSectorsHuge:    dd   0
-    driveNum:          db   0
-    reserved:          db   0
-    signature:         db   0x29
-    volumeID:          dd   0x2d7e5a1a
-    volumeLabel:       db   "   EMU OS  "
-    fileSysType:       db   "  FAT12 "
+; boot:
+; 	Jump:			   db 	0xEB, 0x3C, 0x90
+;     OEMname:           db   "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
+;     bytesPerSector:    dw   512
+;     sectPerCluster:    db   2
+;     reservedSectors:   dw   1
+;     numFAT:            db   2
+;     numRootDirEntries: dw   224
+;     numSectors:        dw   2880
+;     mediaType:         db   0xf0
+;     numFATsectors:     dw   9
+;     sectorsPerTrack:   dw   18
+;     numHeads:          dw   2
+;     numHiddenSectors:  dd   0
+;     numSectorsHuge:    dd   0
+;     driveNum:          db   0
+;     reserved:          db   0
+;     signature:         db   0x29
+;     volumeID:          dd   0x2d7e5a1a
+;     volumeLabel:       db   "   EMU OS  "
+;     fileSysType:       db   "  FAT12 "
 
 start:
 	jmp main
@@ -67,14 +67,15 @@ lba_to_chs:
 
 	xor dx, dx 							; clear because div divides dx:ax by a value
 										; ax contains the LBA
-	div word [sectorsPerTrack]			; ax contains quotient which will keep as is, required.
-										; dx contains remainder
+
+	div word [sectors_per_track]		; ax contains quotient which will keep as is, required.
+										; dx contains remainder, which is sectors - 1
 
 	inc dx								; Sectors is dx + 1
 	mov cx, dx							
 
 	xor dx, dx
-	div word [numHeads]					; ax contains quotient, which is Cylinder
+	div word [head_count]				; ax contains quotient, which is Cylinder
 										; dx contains remainder, which is Head
 	mov dh, dl
 	mov ch, al
@@ -137,6 +138,23 @@ disk_read:
 	pop ax
 	
 	ret
+
+load_run_kernel:
+	push dx
+	push si
+	push ax
+
+	mov si, bx
+
+	lodsw
+	lodsw
+
+	mov ax, 0xDEAD ; indicator for debugger to set break point
+	
+	pop ax
+	pop si
+	pop dx
+	ret
 	
 main:
 	; setup data segments
@@ -155,11 +173,29 @@ main:
 	call puts
 	call print_new_line
 
-	mov [driveNum], dl
-	mov ax, 3
-	mov cl, 1
+	mov [drive_num], dl
+
+	; get head_count and sectors_per_track from bios
+	; push es
+	; mov ah, 08h
+
+	; int 13h						; dh = number of heads - 1, cx-[0:5] sectors per track
+
+	; pop es
+
+	; xor ch, ch
+	; and cl, 0x3f
+
+	; inc dh
+	; mov [head_count], dh
+	; mov [sectors_per_track], cx
+
+	mov ax, 1
+	mov cl, 2
 	mov bx, 0x7e00
 	call disk_read
+
+	call load_run_kernel
 
 	call print_new_line
 	call print_new_line
@@ -190,7 +226,12 @@ msg_hello			:db 'Hello World!', 0x0D, 0x0A, 0
 msg_bye				:db 'Bye World!', 0x0D, 0x0A, 0
 msg_disk_read_error	:db 'Read from disk failed!', 0x0D, 0x0A, 0
 msg_reboot			:db 'Press any key to reboot...', 0x0D, 0x0A, 0
-
+boot_sector_size 	:dw 512
+emufs_table_size	:dw 1024
+bytes_per_sector	:dw 512
+sectors_per_track	:dw 18
+head_count			:db 2
+drive_num			:db 0
 times 510-($-$$) db 0
 
 dw 0AA55h

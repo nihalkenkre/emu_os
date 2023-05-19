@@ -5,3 +5,6 @@
 *build*
 *.bin
 *.img
+
+# Init files
+bx_enh_dbg.ini
