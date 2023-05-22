@@ -15,8 +15,6 @@ start:
 ; call print_new_line
 ;
 
-
-
 ; Params:
 ;	si		: the label to be printed
 ;	sp + 4	: the value to be printed
@@ -98,8 +96,8 @@ main:
     cli
     hlt
 
-ax_label: db 'AX: 0x', 0
-sample				:db '0123456789ABCDEF'
+ax_label: 	db 'AX: 0x', 0
+sample:		db '0123456789ABCDEF'
 
 times 510-($-$$) db 0
 dw 0xAA55

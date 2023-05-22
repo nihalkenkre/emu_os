@@ -1,30 +1,22 @@
 org 0x7C00
 bits 16
 
-; boot:
-; 	Jump:			   db 	0xEB, 0x3C, 0x90
-;     OEMname:           db   "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
-;     bytesPerSector:    dw   512
-;     sectPerCluster:    db   2
-;     reservedSectors:   dw   1
-;     numFAT:            db   2
-;     numRootDirEntries: dw   224
-;     numSectors:        dw   2880
-;     mediaType:         db   0xf0
-;     numFATsectors:     dw   9
-;     sectorsPerTrack:   dw   18
-;     numHeads:          dw   2
-;     numHiddenSectors:  dd   0
-;     numSectorsHuge:    dd   0
-;     driveNum:          db   0
-;     reserved:          db   0
-;     signature:         db   0x29
-;     volumeID:          dd   0x2d7e5a1a
-;     volumeLabel:       db   "   EMU OS  "
-;     fileSysType:       db   "  FAT12 "
-
 start:
 	jmp main
+
+
+print_new_line:
+	push ax
+	mov ah, 0x0e
+	mov al, 0x0D
+	int 10h
+
+	mov al, 0x0A
+	int 10h
+
+	pop ax
+
+	ret
 
 ;
 ; Prints a string on the screen
@@ -34,6 +26,8 @@ start:
 puts:
 	push si
 	push ax
+	push bx
+	push cx
 
 .loop:
 	lodsb				; loads next character into reg al
@@ -47,6 +41,8 @@ puts:
 	jmp .loop
 
 .done:
+	pop cx
+	pop bx
 	pop ax
 	pop si
 
@@ -139,21 +135,29 @@ disk_read:
 	
 	ret
 
-load_run_kernel:
+load_kernel:
+	push ax
+	push bx
+	push cx
 	push dx
 	push si
-	push ax
-
-	mov si, bx
-
-	lodsw
-	lodsw
-
-	mov ax, 0xDEAD ; indicator for debugger to set break point
+	push di
+	push es
 	
-	pop ax
+	mov ax, 1
+	mov cl, 1
+	mov bx, 0x7e00
+
+	call disk_read
+
+	pop es
+	pop di
 	pop si
 	pop dx
+	pop cx
+	pop bx	
+	pop ax
+
 	ret
 	
 main:
@@ -167,7 +171,7 @@ main:
 	mov ss, ax
 	mov sp, 0x7C00
 
-	mov si, msg_hello
+	mov si, msg_loading
 
 	call print_new_line
 	call puts
@@ -190,12 +194,9 @@ main:
 	; mov [head_count], dh
 	; mov [sectors_per_track], cx
 
-	mov ax, 1
-	mov cl, 2
-	mov bx, 0x7e00
-	call disk_read
+	call load_kernel
 
-	call load_run_kernel
+	jmp 0x7e00
 
 	call print_new_line
 	call print_new_line
@@ -205,33 +206,19 @@ main:
 	cli
 	hlt
 
-
-print_new_line:
-	push ax
-	mov ah, 0x0e
-	mov al, 0x0D
-	int 10h
-
-	mov al, 0x0A
-	int 10h
-
-	pop ax
-
-	ret
-
 .halt:
 	jmp .halt
 
-msg_hello			:db 'Hello World!', 0x0D, 0x0A, 0
+msg_loading			:db 'loading...', 0x0D, 0x0A, 0
 msg_bye				:db 'Bye World!', 0x0D, 0x0A, 0
 msg_disk_read_error	:db 'Read from disk failed!', 0x0D, 0x0A, 0
 msg_reboot			:db 'Press any key to reboot...', 0x0D, 0x0A, 0
-boot_sector_size 	:dw 512
-emufs_table_size	:dw 1024
 bytes_per_sector	:dw 512
 sectors_per_track	:dw 18
 head_count			:db 2
 drive_num			:db 0
+kernel_file_name	:db 'kernel.bin'
+
 times 510-($-$$) db 0
 
 dw 0AA55h
