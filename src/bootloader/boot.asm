@@ -194,20 +194,38 @@ main:
 	; mov [head_count], dh
 	; mov [sectors_per_track], cx
 
-	call load_kernel
+	; call load_kernel
 
-	jmp 0x7e00
+	; jmp 0x7e00
 
-	call print_new_line
-	call print_new_line
-	mov si, msg_bye
-	call puts
+	; call print_new_line
+	; call print_new_line
+	; mov si, msg_bye
+	; call puts
 
 	cli
+
+	lgdt [gdt_desc]
+
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
+
+	jmp CODESEG:start_protected_mode
+
 	hlt
 
 .halt:
 	jmp .halt
+
+[bits 32]
+start_protected_mode:
+	mov al, 'A'
+	mov ah, 0x0f
+	mov [0xb8000], ax
+
+	cli
+	hlt
 
 msg_loading			:db 'loading...', 0x0D, 0x0A, 0
 msg_bye				:db 'Bye World!', 0x0D, 0x0A, 0
@@ -218,6 +236,33 @@ sectors_per_track	:dw 18
 head_count			:db 2
 drive_num			:db 0
 kernel_file_name	:db 'kernel.bin'
+
+gdt_start:
+	.null: 
+		dd 0
+		dd 0
+	.code:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x9a
+		db 11001111b
+		db 0
+	.data:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x92
+		db 11001111b
+		db 0
+gdt_end:
+
+gdt_desc:
+	.size:  dw (gdt_end - gdt_start - 1)
+	.offset: dd gdt_start
+
+CODESEG equ gdt_start.code - gdt_start
+DATASEG equ gdt_start.data - gdt_start
 
 times 510-($-$$) db 0
 
