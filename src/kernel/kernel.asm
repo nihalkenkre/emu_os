@@ -92,6 +92,7 @@ setup_vbe:
 	push ds
 	push di
 	push cx
+	push dx
 
 	xor ax, ax
 	mov es, ax
@@ -100,10 +101,10 @@ setup_vbe:
 	int 0x10
 
 	cmp al, 0x4f
-	jnz .function_not_supported
+	jnz .func_not_supported
 
 	cmp ah, 0
-	jnz .function_call_failed
+	jnz .func_call_failed
 
 	;
 	; VbeFarPtr is in segment:offset format, since data is laid out in little endian format
@@ -144,23 +145,26 @@ setup_vbe:
 
 
 .video_mode_loop:
-	lodsw					; next mode into ax
+	lodsw					; next mode into ax, comes from ds:si
 
 	xor cx, cx
 	mov es, cx
 	mov di, mode_info_block
 
 	mov cx, ax				; move mode number to cx
-	mov ax, 0x4f01			; function to return VBE mode information
+
+	cmp cx, 0xffff			; check if we are at the end of the list
+	je .vbe_mode_not_found
+
+	mov ax, 0x4f01			; function to return VBE mode information to es:di
 	int 0x10
 
-	cmp al, 0x4f
-	jne .function_not_supported
+	cmp al, 0x4f			; Check if function supported
+	jne .func_not_supported
 
 	cmp ah, 0
-	jne .function_call_failed
+	jne .func_call_failed
 
-	push dx
 	mov dx, [req_x_res]
 	cmp dx, [mode_info_block.x_resolution]
 	jne .video_mode_loop
@@ -169,37 +173,47 @@ setup_vbe:
 	cmp dx, [mode_info_block.y_resolution]
 	jne .video_mode_loop
 
-	mov byte dx, [req_bpp]
-	cmp byte dx, [mode_info_block.bits_per_pixel]
+	mov dl, [req_bpp]
+	cmp dl, [mode_info_block.bits_per_pixel]
 	jne .video_mode_loop
+
+.set_vbe_mode:
+	; Usable mode is in cx
+
+	mov ax, 0x4f02			; Set VBE mode function
+	mov bx, cx				; move mode number to bx
+
+	int 0x10
+
+	jmp .return
+
+.func_not_supported:
+	mov si, msg_vbe_func_not_supported
+	call puts
+
+.func_call_failed:
+	mov si, msg_vbe_func_call_failed
+	call puts
+
+.vbe_mode_not_found:
+	mov cx, 0
+	mov ds, cx
+	mov si, msg_vbe_mode_not_found
+	call puts
+
+.return:
 	pop dx
-
-	push si
-	push ax
-	mov ax, [mode_info_block.bits_per_pixel]
-	push ax
-	mov si, ax_label
-	call print_reg
-	call print_new_line
-	pop ax
-
-	pop ax
-	pop si
-
-	cmp ax, 0xffff			; check if we are at the end of the list
-	jne .video_mode_loop
-
-
-.function_not_supported:
-.function_call_failed:
 	pop cx
 	pop di
 	pop ds
 	pop ax
+
 	ret
 
 draw_something:
 	push ax
+	push ds
+	push dx
 
 	mov ah, 0			; Set video mode
 	mov al, 0x13		; Set graphical mode
@@ -207,10 +221,12 @@ draw_something:
 
 	mov ah, 0xc			; Change color for a single pixel
 	mov al, 0xf			; Pixel color
-	mov cx, 160			; Column
+	mov cx, 200			; Column
 	mov dx, 100			; Row
 	int 0x10
 
+	pop dx
+	pop ds
 	pop ax
 
 	ret
@@ -219,12 +235,15 @@ main:
 	mov si, msg_hello
 	call puts
 	
-	mov si, msg_loading_files
+	mov si, msg_setup_vbe
 	call puts
 
 	; call draw_something
 
 	call setup_vbe
+
+	mov si, msg_bye
+	call puts
 
 	cli
 	hlt
@@ -233,17 +252,22 @@ main:
 	jmp .halt
 
 msg_hello: 			db 'Hello World from kernel!', ENDL, 0
-msg_loading_files: 	db 'loading files...', ENDL, 0
+msg_setup_vbe: 	db 'setting up vbe...', ENDL, 0
+msg_vbe_func_not_supported: db 'VBE function not supported...', ENDL, 0
+msg_vbe_func_call_failed: db 'VBE function call failed...', ENDL, 0
+msg_vbe_mode_not_found: db 'VBE mode not found...', ENDL, 0
+msg_bye:			db 'Bye from Kernel!', ENDL, 0
 
 ax_label: 		db 'AX: 0x', 0
 cx_label: 		db 'CX: 0x', 0
+dx_label: 		db 'DX: 0x', 0
 x_res_label: 	db 'x res:', 0
 y_res_label: 	db 'y res:', 0
 bpp_label:		db 'bpp:', 0
 
-req_x_res:		dw 0x0780
-req_y_res:		dw 0x0438
-req_bpp:		db 0x20
+req_x_res:		dw 0x0280
+req_y_res:		dw 0x01e0
+req_bpp:		db 0x8
 
 sample:			db '0123456789ABCDEF'
 
