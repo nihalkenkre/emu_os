@@ -240,7 +240,7 @@ main:
 
 	; call draw_something
 
-	call setup_vbe
+	; call setup_vbe
 
 	mov si, msg_bye
 	call puts

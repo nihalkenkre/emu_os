@@ -177,7 +177,7 @@ main:
 	call puts
 	call print_new_line
 
-	mov [drive_num], dl
+	; mov [drive_num], dl
 
 	; get head_count and sectors_per_track from bios
 	; push es
@@ -194,16 +194,41 @@ main:
 	; mov [head_count], dh
 	; mov [sectors_per_track], cx
 
-	call load_kernel
+	; call load_kernel
 
-	jmp 0x7e00
+	; jmp 0x7e00
 
-	call print_new_line
-	call print_new_line
+	; call print_new_line
+	; call print_new_line
+	; mov si, msg_bye
+	; call puts
+
+	cli
+
+	lgdt [gdt_desc]
+	mov eax, cr0
+	or eax, 1
+	mov cr0, eax
+	
+	xor eax, eax
+	mov cs, eax
+	mov ds, eax
+	mov es, eax
+	mov fs, eax
+	mov gs, eax
+
+	jmp 0x10:.protected_mode
+
 	mov si, msg_bye
 	call puts
 
-	cli
+	hlt
+
+[bits 32]
+.protected_mode:
+	mov al, 'A'
+	mov ah, 0x0f
+	mov [0xb000], ax
 	hlt
 
 .halt:
@@ -218,6 +243,35 @@ sectors_per_track	:dw 18
 head_count			:db 2
 drive_num			:db 0
 kernel_file_name	:db 'kernel.bin'
+
+gdt:
+	.null: 
+			dd 0
+			dd 0
+
+	.code:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x9a
+		db 11001111b
+		db 0
+
+	.data:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x92
+		db 11001111b
+		db 0
+
+gdt_desc:
+	.size: db ($ - gdt - 1)
+	.start: dw gdt
+
+code_seg equ gdt.code - gdt
+data_seg equ gdt.data - gdt
+
 
 times 510-($-$$) db 0
 
