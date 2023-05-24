@@ -206,33 +206,26 @@ main:
 	cli
 
 	lgdt [gdt_desc]
+
 	mov eax, cr0
-	or eax, 1
+	or eax, 0x1
 	mov cr0, eax
-	
-	xor eax, eax
-	mov cs, eax
-	mov ds, eax
-	mov es, eax
-	mov fs, eax
-	mov gs, eax
 
-	jmp 0x10:.protected_mode
+	jmp CODESEG:start_protected_mode
 
-	mov si, msg_bye
-	call puts
-
-	hlt
-
-[bits 32]
-.protected_mode:
-	mov al, 'A'
-	mov ah, 0x0f
-	mov [0xb000], ax
 	hlt
 
 .halt:
 	jmp .halt
+
+[bits 32]
+start_protected_mode:
+	mov al, 'A'
+	mov ah, 0x0f
+	mov [0xb8000], ax
+
+	cli
+	hlt
 
 msg_loading			:db 'loading...', 0x0D, 0x0A, 0
 msg_bye				:db 'Bye World!', 0x0D, 0x0A, 0
@@ -244,11 +237,10 @@ head_count			:db 2
 drive_num			:db 0
 kernel_file_name	:db 'kernel.bin'
 
-gdt:
+gdt_start:
 	.null: 
-			dd 0
-			dd 0
-
+		dd 0
+		dd 0
 	.code:
 		dw 0xffff
 		dw 0
@@ -256,7 +248,6 @@ gdt:
 		db 0x9a
 		db 11001111b
 		db 0
-
 	.data:
 		dw 0xffff
 		dw 0
@@ -264,14 +255,14 @@ gdt:
 		db 0x92
 		db 11001111b
 		db 0
+gdt_end:
 
 gdt_desc:
-	.size: db ($ - gdt - 1)
-	.start: dw gdt
+	.size:  dw (gdt_end - gdt_start - 1)
+	.offset: dd gdt_start
 
-code_seg equ gdt.code - gdt
-data_seg equ gdt.data - gdt
-
+CODESEG equ gdt_start.code - gdt_start
+DATASEG equ gdt_start.data - gdt_start
 
 times 510-($-$$) db 0
 
