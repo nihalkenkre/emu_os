@@ -61,5 +61,3 @@ main:
 
 .halt:
 	jmp .halt
-
-%include "./src/utils/prints.asm"
