@@ -76,8 +76,8 @@ puts:
 	or al, al 			; verify if the next character is null
 	jz .done
 	
-	mov ah, 0x0E		
-	mov bh, 0			; page number (text modes)
+	mov ah, 0x0E		; teletype mode	
+	mov bh, 0			; page number
 	int 0x10			; call bios interrupt
 	
 	jmp .loop
@@ -85,6 +85,7 @@ puts:
 .done:
 	pop ax
 	pop si
+
 	ret
 
 setup_vbe:
@@ -181,7 +182,8 @@ setup_vbe:
 	; Usable mode is in cx
 
 	mov ax, 0x4f02			; Set VBE mode function
-	mov bx, cx				; move mode number to bx
+	mov bx, cx				; move mode number to bx for int 10
+	or bx, 0x4000			; Enable linear frame buffer mode
 
 	int 0x10
 
@@ -210,21 +212,81 @@ setup_vbe:
 
 	ret
 
+clear_screen:
+	push eax
+	push es
+	push di
+	push cx
+
+	cmp dword [mode_info_block.phy_base_ptr], 0
+	jz .mode_not_available
+
+	mov eax, [mode_info_block.phy_base_ptr]
+	shr eax, 4
+	mov es, eax
+
+	mov eax, [mode_info_block.phy_base_ptr]
+	and eax, 0x0f
+	mov di, ax
+
+	mov eax, 0x00ffff00
+
+	mov cx, 100000
+
+	rep stosd
+
+.mode_not_available:
+	mov si, msg_vbe_mode_not_available
+	call puts
+
+	pop cx
+	pop di
+	pop es
+	pop eax
+	
+	ret
+
 draw_something:
 	push ax
 	push ds
 	push dx
+	push es
+	push di
+	push cx
 
 	mov ah, 0			; Set video mode
 	mov al, 0x13		; Set graphical mode
 	int 0x10
 
-	mov ah, 0xc			; Change color for a single pixel
-	mov al, 0xf			; Pixel color
-	mov cx, 200			; Column
-	mov dx, 100			; Row
-	int 0x10
+	; mov ah, 0xc			; Change color for a single pixel
+	; mov al, 0xf			; Pixel color
+	; mov cx, 200			; Column
+	; mov dx, 100			; Row
+	; int 0x10
 
+	mov ax, 0xa000
+	mov es, ax
+	mov di, 0x0000
+	
+	mov cx, 160 * 100
+	mov al, 0xaa
+	rep stosb
+
+	mov cx, 160 * 100
+	mov al, 0x01
+	rep stosb
+
+	mov cx, 160 * 100
+	mov al, 0x05
+	rep stosb
+
+	mov cx, 160 * 100
+	mov al, 0x04
+	rep stosb
+
+	push cx
+	pop di
+	pop es
 	pop dx
 	pop ds
 	pop ax
@@ -238,15 +300,15 @@ main:
 	mov si, msg_setup_vbe
 	call puts
 
-	; call draw_something
+	call draw_something
 
 	; call setup_vbe
+	; call clear_screen
 
 	mov si, msg_bye
 	call puts
 
-	cli
-	hlt
+	ret
 
 .halt:
 	jmp .halt
@@ -256,6 +318,7 @@ msg_setup_vbe: 	db 'setting up vbe...', ENDL, 0
 msg_vbe_func_not_supported: db 'VBE function not supported...', ENDL, 0
 msg_vbe_func_call_failed: db 'VBE function call failed...', ENDL, 0
 msg_vbe_mode_not_found: db 'VBE mode not found...', ENDL, 0
+msg_vbe_mode_not_available: db 'VBE mode not available...', ENDL, 0
 msg_bye:			db 'Bye from Kernel!', ENDL, 0
 
 ax_label: 		db 'AX: 0x', 0
@@ -267,7 +330,7 @@ bpp_label:		db 'bpp:', 0
 
 req_x_res:		dw 0x0280
 req_y_res:		dw 0x01e0
-req_bpp:		db 0x8
+req_bpp:		db 0x20
 
 sample:			db '0123456789ABCDEF'
 

@@ -28,7 +28,7 @@ always:
 	mkdir -p $(BUILD_DIR)
 
 run: 
-	qemu-system-i386 -fda $(BUILD_DIR)/main_floppy.img
+	qemu-system-i386 -drive format=raw,file=$(BUILD_DIR)/main_floppy.img
 
 clean:
 	rm -fr $(BUILD_DIR)/*
