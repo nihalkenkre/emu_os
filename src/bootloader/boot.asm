@@ -41,8 +41,10 @@ main:
 
 .table_loop:
     push ecx
-
+    
 .filename_loop:
+    xor ecx, ecx
+    mov cl, byte [emufs_filename_len]
     mov si, kernel_filename
     repe cmpsb
     jz .found_kernel

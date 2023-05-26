@@ -52,16 +52,18 @@ load_sectors:
     dec bx
     cmp bx, 0
 
-    push cx
-    push si
-    push bx
-    mov si, bx_label
-    mov cl, byte [bx_label_len]
-    call print_reg
-    call print_new_line
-    pop bx
-    pop si
-    pop cx
+    ; print value of bx register
+    ; push cx
+    ; push si
+    ; push bx
+    ; mov si, bx_label
+    ; mov cl, byte [bx_label_len]
+    ; call print_reg
+    ; call print_new_line
+    ; pop bx
+    ; pop si
+    ; pop cx
+
     jnz .sector_loop
 
     popa
