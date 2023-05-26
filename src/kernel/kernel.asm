@@ -5,7 +5,6 @@ start:
 	jmp main
 
 main:
-
 	call setup_vbe
 
 	ret

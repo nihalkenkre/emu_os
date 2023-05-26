@@ -19,7 +19,7 @@ load_sectors:
     mov al, 0xa0
     out dx, al
 
-    mov bl, 50             ; number of sectors
+    mov bl, 4             ; number of sectors
 
     mov dx, 0x1f2
     mov al, bl
@@ -57,6 +57,13 @@ load_sectors:
 
     dec bx
     cmp bx, 0
+    push si
+    push bx
+    mov si, bx_label
+    call print_reg
+    call print_new_line
+    pop bx
+    pop si
     jnz .sector_loop
 
     popa
@@ -65,6 +72,8 @@ load_sectors:
 
 .halt:
     jmp .halt
+
+%include "./src/utils/prints.asm"
 
 times 510 - ($ - $$) db 0
 dw 0xAA55

@@ -1,9 +1,5 @@
 setup_vbe:
-	push ax
-	push ds
-	push di
-	push cx
-	push dx
+	pusha
 
 	xor ax, ax
 	mov es, ax
@@ -59,14 +55,17 @@ setup_vbe:
 .video_mode_loop:
 	lodsw					; next mode into ax, comes from ds:si
 
-	xor cx, cx
-	mov es, cx
-	mov di, mode_info_block
-
 	mov cx, ax				; move mode number to cx
 
 	cmp cx, 0xffff			; check if we are at the end of the list
 	je .vbe_mode_not_found
+
+	push cx
+	xor cx, cx
+	mov es, cx
+	pop cx
+
+	mov di, mode_info_block
 
 	mov ax, 0x4f01			; function to return VBE mode information to es:di
 	int 0x10
@@ -115,11 +114,7 @@ setup_vbe:
 	call puts
 
 .return:
-	pop dx
-	pop cx
-	pop di
-	pop ds
-	pop ax
+	popa
 
 	ret
 
@@ -134,8 +129,8 @@ setup_vbe:
 	
 	ret
 
-req_x_res:		dw 0x0780
-req_y_res:		dw 0x0438
-req_bpp:		db 0x8
+req_x_res:		dw 0x0280
+req_y_res:		dw 0x01e0
+req_bpp:		db 0x20
 
 %include "./src/vbe/info_blocks.asm"
