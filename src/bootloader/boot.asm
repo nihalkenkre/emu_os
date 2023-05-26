@@ -56,16 +56,15 @@ main:
 
 .found_kernel:
     mov si, kernel_found
-    mov cx, [kernel_found_len]
+    mov cl, byte [kernel_found_len]
     call puts
 
     cli
     hlt
 
-
 .kernel_not_found:
     mov si, kernel_not_found
-    mov cx, [kernel_not_found_len]
+    mov cl, byte [kernel_not_found_len]
     call puts
     
     cli

@@ -3,8 +3,8 @@
 
 %include "./src/utils/prints.asm"
 
-%define ENDL 0x0A, 0x0D
-bx_label: db 'BX: 0x', 0
+bx_label: db 'BX: 0x'
+bx_label_len: db ($ - bx_label)
 ;
 ; Load sectors from the master hard disk into memory
 ; Params:
@@ -51,13 +51,17 @@ load_sectors:
 
     dec bx
     cmp bx, 0
-    ; push si
-    ; push bx
-    ; mov si, bx_label
-    ; call print_reg
-    ; call print_new_line
-    ; pop bx
-    ; pop si
+
+    push cx
+    push si
+    push bx
+    mov si, bx_label
+    mov cl, byte [bx_label_len]
+    call print_reg
+    call print_new_line
+    pop bx
+    pop si
+    pop cx
     jnz .sector_loop
 
     popa

@@ -17,7 +17,7 @@ sample:			db '0123456789ABCDEF'
 ; Params:
 ;	si		: the label to be printed
 ;	sp + 4	: the value to be printed
-;
+;	cx		: the length of the label
 print_reg:
 	call puts
 
