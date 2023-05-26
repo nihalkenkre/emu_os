@@ -65,4 +65,4 @@ mode_info_block:
 	.lin_rsvd_mask_size:		db 0
 	.iln_rsvd_field_position:	db 0
 	.max_pixel_clock:			dd 0
-	.reserved_c:	
+	.reserved_c:				times 189 db 0	

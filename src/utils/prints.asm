@@ -1,5 +1,3 @@
-%include "./src/utils/texts.asm"
-
 ; To print the value of a register, push the register to the stack and 
 ; make si point to the stack label
 ; This prints out the value of SI after printing out the si label
@@ -95,3 +93,5 @@ print_new_line:
 	pop ax
 
 	ret	
+
+%include "./src/utils/texts.asm"

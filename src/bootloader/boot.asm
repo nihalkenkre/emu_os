@@ -5,16 +5,28 @@ start:
     jmp main
 
 main:
+    call load_sectors
+
+    call 0x7e00
+
+    cli
+    hlt
+
+load_sectors:
+    pusha
+
     mov dx, 0x1f6
     mov al, 0xa0
     out dx, al
 
+    mov bl, 50             ; number of sectors
+
     mov dx, 0x1f2
-    mov al, 1
+    mov al, bl
     out dx, al
 
     mov dx, 0x1f3
-    mov al, 2
+    mov al, 2               ; Start sector number
     out dx, al
 
     mov dx, 0x1f4
@@ -29,22 +41,27 @@ main:
     mov al, 0x20
     out dx, al
 
+    xor ax, ax
+    mov es, ax
+    mov di, 0x7e00
+
+.sector_loop:
 .loop:
     in al, dx
     test al, 8
     je .loop
 
-    xor ax, ax
-    mov es, ax
-    mov di, 0x7e00
     mov cx, 256
     mov dx, 0x1f0
     rep insw
 
-    jmp 0x7e00
+    dec bx
+    cmp bx, 0
+    jnz .sector_loop
 
-    cli
-    hlt
+    popa
+
+    ret
 
 .halt:
     jmp .halt

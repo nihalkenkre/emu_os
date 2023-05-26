@@ -134,7 +134,8 @@ setup_vbe:
 	
 	ret
 
-req_x_res:		dw 0x0280
-req_y_res:		dw 0x01e0
-req_bpp:		db 0x20
+req_x_res:		dw 0x0780
+req_y_res:		dw 0x0438
+req_bpp:		db 0x8
 
+%include "./src/vbe/info_blocks.asm"
