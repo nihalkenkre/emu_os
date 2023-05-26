@@ -1,3 +1,6 @@
+%ifndef TEXTS
+%define TEXTS
+
 %define ENDL 0x0D, 0x0A
 
 msg_hello: 			db 'Hello World!', ENDL, 0
@@ -20,3 +23,5 @@ y_res_label: 	db 'y res:', 0
 bpp_label:		db 'bpp:', 0
 
 sample:			db '0123456789ABCDEF'
+
+%endif

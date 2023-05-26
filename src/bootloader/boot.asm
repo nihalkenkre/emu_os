@@ -1,81 +1,40 @@
+%ifndef BOOT
+%define BOOT
+
 org 0x7c00
 bits 16
 
 start:
     jmp main
 
+%include "./src/disk/io.asm"
+
 main:
+    mov ax, 0
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov si, ax
+    mov di, ax
+
     mov sp, 0x7c00
 
-    call load_sectors
+    mov bx, 8           ; number of sectors to load. The emufs table is 4096 bytes, each sector is 512 bytes
+    mov cl, 2           ; number of the sector to start from
 
-    call 0x7e00
+    mov es, ax
+    mov di, 0x7e00      ; the data will be copied to es:di - 0:0x7e00
+
+    call load_sectors
 
     cli
     hlt
 
-load_sectors:
-    pusha
-
-    mov dx, 0x1f6
-    mov al, 0xa0
-    out dx, al
-
-    mov bl, 4             ; number of sectors
-
-    mov dx, 0x1f2
-    mov al, bl
-    out dx, al
-
-    mov dx, 0x1f3
-    mov al, 2               ; Start sector number
-    out dx, al
-
-    mov dx, 0x1f4
-    xor al, al
-    out dx, al
-
-    mov dx, 0x1f5
-    xor al, al
-    out dx, al
-
-    mov dx, 0x1f7
-    mov al, 0x20
-    out dx, al
-
-    xor ax, ax
-    mov es, ax
-    mov di, 0x7e00
-
-.sector_loop:
-.loop:
-    in al, dx
-    test al, 8
-    je .loop
-
-    mov cx, 256
-    mov dx, 0x1f0
-    rep insw
-
-    dec bx
-    cmp bx, 0
-    push si
-    push bx
-    mov si, bx_label
-    call print_reg
-    call print_new_line
-    pop bx
-    pop si
-    jnz .sector_loop
-
-    popa
-
-    ret
-
 .halt:
     jmp .halt
 
-%include "./src/utils/prints.asm"
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
+
+%endif

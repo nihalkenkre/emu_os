@@ -1,3 +1,5 @@
+%ifndef DRAW
+%define DRAW
 
 draw_something:
 	push ax
@@ -45,3 +47,5 @@ draw_something:
 	pop ax
 
 	ret
+
+%endif

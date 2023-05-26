@@ -1,3 +1,6 @@
+%ifndef INFO BLOCKS
+%define INFO_BLOCKS
+
 vbe_info_block:
 	.signature: 			db 'VESA' 
 	.version: 				dw 0x0300 
@@ -66,3 +69,5 @@ mode_info_block:
 	.iln_rsvd_field_position:	db 0
 	.max_pixel_clock:			dd 0
 	.reserved_c:				times 189 db 0	
+
+%endif
