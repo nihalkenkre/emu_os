@@ -6,9 +6,14 @@ An operating system written from scratch to eventually run the Chip8 apps and la
 ## Data Layout of the Disk.
 
 - The bootloader is stored in the first 512 bytes of the disk.
-- The kernel is stored in the 1024 bytes after the bootloader.
-- The next 2048 bytes contain the file info. 10 byte file name and data of the file.
-- The raw file data comes next, tightly packed. A 320x200 banner data will be stored before the actual file data.
+- The EMU File Table is stored in the next 4096 bytes.
+- The table contains table entry of the format
+```
+    uint8_t file_name[10];
+    uint16_t file_offset;
+    uint16_t file_size;
+```
+- The raw file data is stored after the EMU File Table
 
 *This is subject to change*
 

@@ -5,6 +5,8 @@ start:
     jmp main
 
 main:
+    mov sp, 0x7c00
+
     call load_sectors
 
     call 0x7e00
