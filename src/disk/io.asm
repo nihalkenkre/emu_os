@@ -51,13 +51,13 @@ load_sectors:
 
     dec bx
     cmp bx, 0
-    push si
-    push bx
-    mov si, bx_label
-    call print_reg
-    call print_new_line
-    pop bx
-    pop si
+    ; push si
+    ; push bx
+    ; mov si, bx_label
+    ; call print_reg
+    ; call print_new_line
+    ; pop bx
+    ; pop si
     jnz .sector_loop
 
     popa

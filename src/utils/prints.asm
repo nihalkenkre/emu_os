@@ -62,22 +62,22 @@ print_reg:
 ; Prints a string on the screen
 ; Params:
 ;	- ds:si points to string
-;
+;	- cx points to length of string
 puts:
 	push si
 	push ax
 
 .loop:
 	lodsb				; loads next character into reg al
-	or al, al 			; verify if the next character is null
-	jz .done
 	
 	mov ah, 0x0E		
 	mov bh, 0			; page number (text modes)
 	int 0x10			; call bios interrupt
-	
-	jmp .loop
 
+	dec cx
+	cmp cx, 0
+	jnz .loop
+	
 .done:
 	pop ax
 	pop si
