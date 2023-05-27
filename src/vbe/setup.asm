@@ -8,20 +8,7 @@ req_bpp:		db 0x20
 %include "./src/vbe/info_blocks.asm"
 %include "./src/prints/print_new_line.asm"
 
-msg_vbe_setup: 	db 'setting up vbe...'
-msg_vbe_setup_len: db ($ - msg_vbe_setup)
-msg_vbe_func_not_supported: db 'VBE function not supported...'
-msg_vbe_func_not_supported_len: db ($ - msg_vbe_func_not_supported)
-msg_vbe_func_call_failed: db 'VBE function call failed...'
-msg_vbe_func_call_failed_len: db ($ - msg_vbe_func_call_failed)
-msg_vbe_mode_not_found: db 'VBE mode not found...'
-msg_vbe_mode_not_found_len: db ($ - msg_vbe_mode_not_found)
-msg_vbe_mode_not_available: db 'VBE mode not available...'
-msg_vbe_mode_not_available_len: db ($ - msg_vbe_mode_not_available)
-
 setup_vbe:
-	pusha
-
 	xor ax, ax
 	mov es, ax
 	mov ax, 0x4f00
@@ -123,32 +110,37 @@ setup_vbe:
 .func_not_supported:
 	mov si, msg_vbe_func_not_supported
 	; call puts
+	jmp .return
 
 .func_call_failed:
 	mov si, msg_vbe_func_call_failed
 	; call puts
+	jmp .return
 
 .vbe_mode_not_found:
-	mov cx, 0
-	mov ds, cx
 	mov si, msg_vbe_mode_not_found
 	; call puts
-
-.return:
-	popa
-
-	ret
+	jmp .return
 
 .mode_not_available:
 	mov si, msg_vbe_mode_not_available
 	; call puts
+	jmp .return
 
-	pop cx
-	pop di
-	pop es
-	pop eax
-	
+.return:
+
 	ret
+
+msg_vbe_setup: 	db 'setting up vbe...'
+msg_vbe_setup_len: db ($ - msg_vbe_setup)
+msg_vbe_func_not_supported: db 'VBE function not supported...'
+msg_vbe_func_not_supported_len: db ($ - msg_vbe_func_not_supported)
+msg_vbe_func_call_failed: db 'VBE function call failed...'
+msg_vbe_func_call_failed_len: db ($ - msg_vbe_func_call_failed)
+msg_vbe_mode_not_found: db 'VBE mode not found...'
+msg_vbe_mode_not_found_len: db ($ - msg_vbe_mode_not_found)
+msg_vbe_mode_not_available: db 'VBE mode not available...'
+msg_vbe_mode_not_available_len: db ($ - msg_vbe_mode_not_available)
 
 
 %endif
