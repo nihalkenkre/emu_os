@@ -4,6 +4,7 @@
 %include "./src/utils/prints.asm"
 
 emufs_filename_entry equ 10
+emufs_table_size equ 512
 
 bx_label: db 'BX: 0x'
 bx_label_len: db ($ - bx_label)
@@ -100,9 +101,9 @@ get_filename_details:
     ;; Look for the table entry with filename
     ; find number of table entries in table
     xor edx, edx
-    mov eax, 4096       ; emufs table total size
-    mov ecx, 14         ; size of table entry: 10 byte file name + 2 byte offset from disk start + 2 byte size
-    div ecx             ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov eax, emufs_table_size       ; emufs table total size
+    mov ecx, 14                     ; size of table entry: 10 byte file name + 2 byte offset from disk start + 2 byte size
+    div ecx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
     ; eax contains the number of table entries
     ; Loop through table entries to find entry with filename

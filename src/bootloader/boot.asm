@@ -23,9 +23,9 @@ main:
     ; Calculate the number of sectors to load.
     ; Divide the emufs table size by the size of 1 sector
     xor edx, edx
-    mov eax, 4096       ; Size in bytes of the emufs table to load
-    mov ecx, 512        ; Size in bytes of 1 sector
-    div ecx             ; eax contains the quotient, the number of sectors
+    mov eax, emufs_table_size       ; Size in bytes of the emufs table to load
+    mov ecx, 512                    ; Size in bytes of 1 sector
+    div ecx                         ; eax contains the quotient, the number of sectors
 
     mov bx, ax          ; move the sector count to bx, for load_sectors
     mov cl, 2           ; number of the sector to start from, for load_sectors
@@ -47,8 +47,7 @@ main:
     mov cl, [kernel_found_len]
     call puts
 
-    cli
-    hlt
+    jmp .halt
 
 .file_not_found:
     mov si, kernel_not_found
@@ -56,11 +55,11 @@ main:
     mov cl, [kernel_not_found_len]
     call puts
 
-    cli
-    hlt
+    jmp .halt
 
 .halt:
-    jmp .halt
+    cli
+    hlt
 
 %include "./src/disk/io.asm"
 
@@ -70,6 +69,8 @@ kernel_found: db 'kernel found...'
 kernel_found_len: db ($ - kernel_found)
 kernel_not_found: db 'kernel not found...'
 kernel_not_found_len: db ($ - kernel_not_found)
+
+emufs_table_size equ 512
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
