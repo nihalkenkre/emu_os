@@ -6,7 +6,7 @@ req_y_res:		dw 0x01e0
 req_bpp:		db 0x20
 
 %include "./src/vbe/info_blocks.asm"
-%include "./src/utils/prints.asm"
+%include "./src/prints/print_new_line.asm"
 
 msg_vbe_setup: 	db 'setting up vbe...'
 msg_vbe_setup_len: db ($ - msg_vbe_setup)
@@ -43,28 +43,28 @@ setup_vbe:
 	push ds
 	mov si, word [vbe_info_block.oem_string]
 	mov ds, word [vbe_info_block.oem_string + 2]
-	call puts
+	; call puts
 	call print_new_line
 	pop ds
 	
 	push ds
 	mov si, word [vbe_info_block.oem_vendor_name_ptr]
 	mov ds, word [vbe_info_block.oem_vendor_name_ptr + 2]
-	call puts
+	; call puts
 	call print_new_line
 	pop ds
 
 	push ds
 	mov si, word [vbe_info_block.oem_product_name_ptr]
 	mov ds, word [vbe_info_block.oem_product_name_ptr + 2]
-	call puts
+	; call puts
 	call print_new_line
 	pop ds
 
 	push ds
 	mov si, word [vbe_info_block.oem_product_rev_ptr]
 	mov ds, word [vbe_info_block.oem_product_rev_ptr + 2]
-	call puts
+	; call puts
 	call print_new_line
 	pop ds
 
@@ -122,17 +122,17 @@ setup_vbe:
 
 .func_not_supported:
 	mov si, msg_vbe_func_not_supported
-	call puts
+	; call puts
 
 .func_call_failed:
 	mov si, msg_vbe_func_call_failed
-	call puts
+	; call puts
 
 .vbe_mode_not_found:
 	mov cx, 0
 	mov ds, cx
 	mov si, msg_vbe_mode_not_found
-	call puts
+	; call puts
 
 .return:
 	popa
@@ -141,7 +141,7 @@ setup_vbe:
 
 .mode_not_available:
 	mov si, msg_vbe_mode_not_available
-	call puts
+	; call puts
 
 	pop cx
 	pop di
