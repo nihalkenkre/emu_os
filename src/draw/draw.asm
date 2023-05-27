@@ -2,12 +2,7 @@
 %define DRAW
 
 draw_something:
-	push ax
-	push ds
-	push dx
-	push es
-	push di
-	push cx
+	pusha
 
 	mov ah, 0			; Set video mode
 	mov al, 0x13		; Set graphical mode
@@ -39,12 +34,7 @@ draw_something:
 	mov al, 0x04
 	rep stosb
 
-	push cx
-	pop di
-	pop es
-	pop dx
-	pop ds
-	pop ax
+	popa
 
 	ret
 
