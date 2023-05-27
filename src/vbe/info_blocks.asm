@@ -4,8 +4,8 @@
 vbe_info_block:
 	.signature: 			db 'VESA' 
 	.version: 				dw 0x0300 
-	.oem_string: 			dd 1
-	.capabilities: 			dd 0
+	.oem_string: 			dd 0
+	.capabilities: 			times 4 db 0
 	.video_mode_ptr: 		dd 0
 	.total_memory: 			dw 0
 	.oem_software_rev: 		dw 0

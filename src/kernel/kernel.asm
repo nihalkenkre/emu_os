@@ -10,7 +10,6 @@ start:
 %include "./src/prints/print_string.asm"
 %include "./src/prints/print_new_line.asm"
 %include "./src/draw/draw.asm"
-%include "./src/vbe/setup.asm"
 
 msg_hello_kernel: 			db 'Hello World from kernel!'
 msg_hello_kernel_len: db ($ - msg_hello_kernel)
@@ -23,12 +22,12 @@ main:
 	call print_string
 	call print_new_line
 
+	call setup_vbe
+	call draw_something
 
 	mov si, msg_bye_kernel
 	mov cl, [msg_bye_kernel_len]
 	call print_string
-
-	call draw_something
 
 	cli
 	hlt
@@ -36,5 +35,6 @@ main:
 .halt:
 	jmp .halt
 
+%include "./src/vbe/setup.asm"
 
 %endif

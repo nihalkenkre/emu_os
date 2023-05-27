@@ -11,7 +11,7 @@ An operating system written from scratch to eventually run the Chip8 apps and la
 ```
     uint8_t file_name[10];
     uint16_t file_offset;
-    uint16_t file_size;
+    uint16_t file_size + padding bytes to the next 512 byte boundary
 ```
 - The raw file data is stored after the EMU File Table
 

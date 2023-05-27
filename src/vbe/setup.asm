@@ -1,14 +1,11 @@
 %ifndef VBE_SETUP
 %define VBE_SETUP
 
-req_x_res:		dw 0x0280
-req_y_res:		dw 0x01e0
-req_bpp:		db 0x20
-
-%include "./src/vbe/info_blocks.asm"
 %include "./src/prints/print_new_line.asm"
 
 setup_vbe:
+	pusha
+
 	xor ax, ax
 	mov es, ax
 	mov ax, 0x4f00
@@ -21,6 +18,7 @@ setup_vbe:
 	cmp ah, 0
 	jnz .func_call_failed
 
+
 	;
 	; VbeFarPtr is in segment:offset format, since data is laid out in little endian format
 	; the 'MSW' goes to the offset, and the 'LSW' goes to the segment.
@@ -30,28 +28,33 @@ setup_vbe:
 	push ds
 	mov si, word [vbe_info_block.oem_string]
 	mov ds, word [vbe_info_block.oem_string + 2]
-	; call puts
+	mov ecx, -1
+	call print_string
 	call print_new_line
 	pop ds
+	 
 	
 	push ds
 	mov si, word [vbe_info_block.oem_vendor_name_ptr]
 	mov ds, word [vbe_info_block.oem_vendor_name_ptr + 2]
-	; call puts
+	mov ecx, -1
+	call print_string
 	call print_new_line
 	pop ds
 
 	push ds
 	mov si, word [vbe_info_block.oem_product_name_ptr]
 	mov ds, word [vbe_info_block.oem_product_name_ptr + 2]
-	; call puts
+	mov ecx, -1
+	call print_string
 	call print_new_line
 	pop ds
 
 	push ds
 	mov si, word [vbe_info_block.oem_product_rev_ptr]
 	mov ds, word [vbe_info_block.oem_product_rev_ptr + 2]
-	; call puts
+	mov ecx, -1
+	call print_string
 	call print_new_line
 	pop ds
 
@@ -109,27 +112,39 @@ setup_vbe:
 
 .func_not_supported:
 	mov si, msg_vbe_func_not_supported
-	; call puts
+	xor ecx, ecx
+	mov cl, [msg_vbe_func_not_supported_len]
+	call print_string
 	jmp .return
 
 .func_call_failed:
 	mov si, msg_vbe_func_call_failed
-	; call puts
+	xor ecx, ecx
+	mov cl, [msg_vbe_func_call_failed_len]
+	call print_string
 	jmp .return
 
 .vbe_mode_not_found:
 	mov si, msg_vbe_mode_not_found
-	; call puts
+	xor ecx, ecx
+	mov cl, [msg_vbe_mode_not_found_len]
 	jmp .return
 
 .mode_not_available:
 	mov si, msg_vbe_mode_not_available
-	; call puts
+	xor ecx, ecx
+	mov cl, [msg_vbe_mode_not_available_len]
 	jmp .return
 
 .return:
+	popa
 
 	ret
+
+
+req_x_res:		dw 0x0280
+req_y_res:		dw 0x01e0
+req_bpp:		db 0x20
 
 msg_vbe_setup: 	db 'setting up vbe...'
 msg_vbe_setup_len: db ($ - msg_vbe_setup)
@@ -142,5 +157,6 @@ msg_vbe_mode_not_found_len: db ($ - msg_vbe_mode_not_found)
 msg_vbe_mode_not_available: db 'VBE mode not available...'
 msg_vbe_mode_not_available_len: db ($ - msg_vbe_mode_not_available)
 
+%include "./src/vbe/info_blocks.asm"
 
 %endif
