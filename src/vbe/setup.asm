@@ -3,6 +3,7 @@
 
 %include "./src/prints/print_new_line.asm"
 
+[bits 16]
 setup_vbe:
 	pusha
 
@@ -128,12 +129,14 @@ setup_vbe:
 	mov si, msg_vbe_mode_not_found
 	xor ecx, ecx
 	mov cl, [msg_vbe_mode_not_found_len]
+	call print_string
 	jmp .return
 
 .mode_not_available:
 	mov si, msg_vbe_mode_not_available
 	xor ecx, ecx
 	mov cl, [msg_vbe_mode_not_available_len]
+	call print_string
 	jmp .return
 
 .return:
@@ -144,7 +147,7 @@ setup_vbe:
 
 req_x_res:		dw 0x0280
 req_y_res:		dw 0x01e0
-req_bpp:		db 0x20
+req_bpp:		db 0x245
 
 msg_vbe_setup: 	db 'setting up vbe...'
 msg_vbe_setup_len: db ($ - msg_vbe_setup)

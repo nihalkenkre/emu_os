@@ -6,20 +6,20 @@ BUILD_DIR=build
 
 IMG_DIR=assets/imgs
 
-.PHONY: all floppy_image bootloader kernel always run clean
+.PHONY: all floppy_image boot kernel always run clean
 
 floppy_image: $(BUILD_DIR)/main_floppy.img
 
-$(BUILD_DIR)/main_floppy.img: bootloader kernel
+$(BUILD_DIR)/main_floppy.img: boot kernel
 	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img count=2880
-	dd if=$(BUILD_DIR)/bootloader.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
+	dd if=$(BUILD_DIR)/boot.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/rocket.bmp
 
-bootloader: $(BUILD_DIR)/bootloader.bin
+boot: $(BUILD_DIR)/boot.bin
 
-$(BUILD_DIR)/bootloader.bin: always
-	$(ASM) $(SRC_DIR)/bootloader/boot.asm -w+* -f bin -o $(BUILD_DIR)/bootloader.bin
+$(BUILD_DIR)/boot.bin: always
+	$(ASM) $(SRC_DIR)/boot/boot.asm -w+* -f bin -o $(BUILD_DIR)/boot.bin
 
 kernel: $(BUILD_DIR)/kernel.bin
 
