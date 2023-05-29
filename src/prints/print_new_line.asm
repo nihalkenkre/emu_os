@@ -5,6 +5,7 @@
 ; Prints a new line to the screen, using int10 commands
 ;
 
+[bits 16]
 print_new_line:
 	push ax
 	mov ah, 0x0e

@@ -1,6 +1,7 @@
 %ifndef DRAW
 %define DRAW
 
+[bits 16]
 draw_something:
 	pusha
 

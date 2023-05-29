@@ -10,15 +10,12 @@ start:
 %include "./src/prints/print_string.asm"
 %include "./src/prints/print_new_line.asm"
 %include "./src/draw/draw.asm"
-
-msg_hello_kernel: 			db 'Hello World from kernel!'
-msg_hello_kernel_len: db ($ - msg_hello_kernel)
-msg_bye_kernel:			db 'Bye from Kernel!'
-msg_bye_kernel_len: db ($ - msg_bye_kernel)
+%include "./src/vbe/setup.asm"
 
 [bits 16]
 main:
 	mov si, msg_hello_kernel
+	xor ecx, ecx
 	mov cl, [msg_hello_kernel_len]
 	call print_string
 	call print_new_line
@@ -26,38 +23,49 @@ main:
 	call setup_vbe
 	; call draw_something
 
+	mov si, msg_bye_kernel
+	xor ecx, ecx
+	mov cl, [msg_bye_kernel_len]
+	call print_string
+	call print_new_line
+
 	cli
 
-	lgdt [gdt_desc]
+	; lgdt [gdt_desc]
 
-	mov eax, cr0
-	or eax, 0x1
-	mov cr0, eax
+	; mov eax, cr0
+	; or eax, 0x1
+	; mov cr0, eax
 
-	jmp CODESEG:start_protected_mode
+	; jmp CODESEG:start_protected_mode
 	
 	hlt
 
 .halt:
 	jmp .halt
 
-[bits 32]
-start_protected_mode:
-	mov al, 'A'
-	mov ah, 0x0f
+; [bits 32]
+; start_protected_mode:
+; 	mov ax, DATASEG
+; 	mov ds, ax
+; 	mov ss, ax
+; 	mov es, ax
+; 	mov fs, ax
+; 	mov gs, ax
 
-	mov [0xb8000], ax
+; 	; mov edi, [mode_info_block.phy_base_ptr]
+; 	; xor eax, eax
+; 	; mov ax, word[req_x_res]
 
-	; mov eax, CODESEG
-	; mov es, eax
+; 	; xor ecx, ecx
+; 	; mov cx, word[req_y_res]
+; 	; mul ecx
 
-	; mov edi, [mode_info_block.phy_base_ptr]
-	; mov eax, 0x00ff00ff
-	; mov ecx, 640 * 480
+; 	; mov ecx, eax
+; 	; mov eax, 0x00ff00ff
+; 	; rep stosd
 
-	; rep stosd
-
-	hlt
+; 	hlt
 
 gdt_start:
 	.null: 
@@ -86,6 +94,11 @@ gdt_desc:
 CODESEG equ gdt_start.code - gdt_start
 DATASEG equ gdt_start.data - gdt_start
 
-%include "./src/vbe/setup.asm"
+msg_hello_kernel: 			db 'Hello World from kernel!'
+msg_hello_kernel_len: db ($ - msg_hello_kernel)
+msg_bye_kernel:			db 'Bye from Kernel!'
+msg_bye_kernel_len: db ($ - msg_bye_kernel)
+
+%include "./src/vbe/info_blocks.asm"
 
 %endif

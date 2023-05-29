@@ -9,6 +9,7 @@ sample:			db '0123456789ABCDEF'
 ;	si		: the label to be printed
 ;	sp + 4	: the value to be printed
 ;	cx		: the length of the label
+[bits 16]
 print_reg:
 	call print_string
 

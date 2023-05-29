@@ -89,8 +89,8 @@ main:
 
 .file_not_found:
     mov si, kernel_not_found
-    xor cx, cx
-    mov cl, [kernel_not_found_len]
+    ; xor cx, cx
+    ; mov cl, [kernel_not_found_len]
     call print_string
 
     jmp .halt

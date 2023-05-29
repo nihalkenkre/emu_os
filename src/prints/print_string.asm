@@ -5,15 +5,16 @@
 ; Prints a string on the screen
 ; Params:
 ;	- ds:si points to string
-;	- cx points to length of string, or -1, 
-;		if -1 then print based on null terminated string
+;	- cx points to length of string, or 0, 
+;		if 0 then print based on null terminated string
 ; 
 
+[bits 16]
 print_string:
 	push si
 	push ax
 
-	cmp cx, -1
+	cmp ecx, 0
 	je .null_ter_loop
 
 .cx_loop:
