@@ -17,6 +17,8 @@ main:
 	call print_string
 	call print_new_line
 
+
+
 .return:
 	mov si, msg_bye_kernel
 	call print_string
