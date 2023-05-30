@@ -14,21 +14,20 @@ print_string:
 	push si
 	push ax
 
-	cmp ecx, 0
-	je .null_ter_loop
+; 	cmp ecx, 0
+; 	je .null_ter_loop
 
-.cx_loop:
-	lodsb				; loads next character into reg al
+; .cx_loop:
+; 	lodsb				; loads next character into reg al
 	
-	mov ah, 0x0E		
-	mov bh, 0			; page number (text modes)
-	mov bl, 0xe
-	int 0x10			; call bios interrupt
+; 	mov ah, 0x0E		
+; 	mov bh, 0			; page number (text modes)
+; 	int 0x10			; call bios interrupt
 
-	dec cx
-	cmp cx, 0
-	jnz .cx_loop
-	jmp .done
+; 	dec cx
+; 	cmp cx, 0
+; 	jnz .cx_loop
+; 	jmp .done
 
 .null_ter_loop:
 	lodsb				; loads next character into reg al
@@ -38,7 +37,6 @@ print_string:
 	
 	mov ah, 0x0E		
 	mov bh, 0			; page number (text modes)
-	mov bl, 0xe
 	int 0x10			; call bios interrupt
 
 	jmp .null_ter_loop

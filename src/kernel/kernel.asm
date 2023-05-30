@@ -7,65 +7,106 @@ bits 16
 start:
 	jmp main
 
-%include "./src/prints/print_string.asm"
-%include "./src/prints/print_new_line.asm"
 %include "./src/draw/draw.asm"
 %include "./src/vbe/setup.asm"
+%include "./src/prints/print_string.asm"
+%include "./src/prints/print_new_line.asm"
 
 [bits 16]
 main:
 	mov si, msg_hello_kernel
-	xor ecx, ecx
-	mov cl, [msg_hello_kernel_len]
 	call print_string
 	call print_new_line
 
+.setup_vbe:
 	call setup_vbe
-	; call draw_something
+	
+	cmp ax, 0
+	jne .vbe_setup_failed
+	jmp .switch_to_32_bits
 
+.vbe_setup_failed:
+	cmp ax, 1
+	je .vbe_function_not_supported
+	cmp ax, 2
+	je .vbe_function_call_failed
+	cmp ax, 3
+	je .vbe_mode_not_found
+	cmp ax, 4
+	je .vbe_mode_not_available
+
+.vbe_function_not_supported:
+	mov si, msg_vbe_func_not_supported
+	xor ax, ax
+	mov ds, ax
+	call print_string
+	call print_new_line
+	jmp .return
+
+.vbe_function_call_failed:
+	mov si, msg_vbe_func_call_failed
+	xor ax, ax
+	mov ds, ax
+	call print_string
+	call print_new_line
+	jmp .return
+
+.vbe_mode_not_found:
+	mov si, msg_vbe_mode_not_found
+	xor ax, ax
+	mov ds, ax
+	call print_string
+	call print_new_line
+	jmp .return
+
+.vbe_mode_not_available:
+	mov si, msg_vbe_mode_not_available
+	xor ax, ax
+	mov ds, ax
+	call print_string
+	call print_new_line
+	jmp .return
+
+.return:
 	mov si, msg_bye_kernel
-	xor ecx, ecx
-	mov cl, [msg_bye_kernel_len]
+	xor ax, ax
+	mov ds, ax
 	call print_string
 	call print_new_line
 
-	cli
-
-	; lgdt [gdt_desc]
-
-	; mov eax, cr0
-	; or eax, 0x1
-	; mov cr0, eax
-
-	; jmp CODESEG:start_protected_mode
-	
 	hlt
 
 .halt:
 	jmp .halt
 
-; [bits 32]
-; start_protected_mode:
-; 	mov ax, DATASEG
-; 	mov ds, ax
-; 	mov ss, ax
-; 	mov es, ax
-; 	mov fs, ax
-; 	mov gs, ax
+.switch_to_32_bits:
+	cli
 
-; 	; mov edi, [mode_info_block.phy_base_ptr]
-; 	; xor eax, eax
-; 	; mov ax, word[req_x_res]
+	lgdt [gdt_desc]
 
-; 	; xor ecx, ecx
-; 	; mov cx, word[req_y_res]
-; 	; mul ecx
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
 
-; 	; mov ecx, eax
-; 	; mov eax, 0x00ff00ff
-; 	; rep stosd
+	jmp CODESEG:start_protected_mode
 
-; 	hlt
+
+[bits 32]
+start_protected_mode:
+	mov ax, DATASEG
+	mov ds, ax
+	mov ss, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	mov edi, [mode_info_block.phy_base_ptr]
+	mov eax, 0xff00ffff
+	mov ecx, 640 * 480
+
+	rep stosd
+
+	hlt
 
 gdt_start:
 	.null: 
@@ -88,17 +129,16 @@ gdt_start:
 gdt_end:
 
 gdt_desc:
-	.size:  dw (gdt_end - gdt_start - 1)
-	.offset: dd gdt_start
+	.size:  	dw (gdt_end - gdt_start - 1)
+	.offset: 	dd gdt_start
 
 CODESEG equ gdt_start.code - gdt_start
 DATASEG equ gdt_start.data - gdt_start
 
-msg_hello_kernel: 			db 'Hello World from kernel!'
-msg_hello_kernel_len: db ($ - msg_hello_kernel)
-msg_bye_kernel:			db 'Bye from Kernel!'
-msg_bye_kernel_len: db ($ - msg_bye_kernel)
+msg_hello_kernel: 		db 'Hello World from kernel!', 0
+msg_bye_kernel:			db 'Bye from Kernel!', 0
 
+%include "./src/vbe/setup_data.asm"
 %include "./src/vbe/info_blocks.asm"
 
 %endif

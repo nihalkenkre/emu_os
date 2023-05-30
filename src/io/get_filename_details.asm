@@ -19,6 +19,9 @@ emufs_table_size equ 512
 ; di is clobbered
 ;
 get_filename_details:
+    push bp
+    mov bp, sp
+
     push edx
     push si
 
@@ -81,6 +84,9 @@ get_filename_details:
 .return:
     pop si
     pop edx
+
+    mov sp, bp
+    pop bp
 
     ret
 

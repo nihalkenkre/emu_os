@@ -3,7 +3,7 @@
 
 vbe_info_block:
 	.signature: 			db 'VESA' 
-	.version: 				dw 0x0300 
+	.version: 				dw 0
 	.oem_string: 			dd 0
 	.capabilities: 			times 4 db 0
 	.video_mode_ptr: 		dd 0
@@ -39,6 +39,7 @@ mode_info_block:
 	.memory_model:			db 0
 	.bank_size:				db 0
 	.number_of_image_pages:	db 0
+	.reserved:				db 0
 
 ; Direct Color fields (required for YUV/7 memory models)
 	.red_mask_size:			db 0
@@ -48,6 +49,7 @@ mode_info_block:
 	.blue_mask_size:		db 0
 	.blue_field_position:	db 0
 	.rsvd_mask_size:		db 0
+	.rsvd_field_position:	db 0
 	.direct_color_mode_info:db 0
 
 ; Information for VBE 2.0 and above
