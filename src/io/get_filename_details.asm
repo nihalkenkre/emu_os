@@ -18,6 +18,7 @@ emufs_table_size equ 512
 ;
 ; di is clobbered
 ;
+[bits 16]
 get_filename_details:
     push bp
     mov bp, sp

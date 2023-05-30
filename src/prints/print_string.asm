@@ -11,6 +11,9 @@
 
 [bits 16]
 print_string:
+	push bp
+	mov bp, sp
+
 	push si
 	push ax
 
@@ -44,6 +47,9 @@ print_string:
 .done:
 	pop ax
 	pop si
+
+	mov sp, bp
+	pop bp
 
 	ret
 

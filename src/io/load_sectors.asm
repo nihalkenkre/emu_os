@@ -8,6 +8,7 @@
 ;   cl      : number of sectors to read
 ;   es:di   : The memory address to copy data to
 ;
+[bits 16]
 load_sectors:
     push bp
     mov bp, sp
@@ -50,18 +51,6 @@ load_sectors:
 
     dec bx
     cmp bx, 0
-
-    ; ; print value of bx register
-    ; push cx
-    ; push si
-    ; push bx
-    ; mov si, bx_label
-    ; mov cl, byte [bx_label_len]
-    ; call print_reg
-    ; call print_new_line
-    ; pop bx
-    ; pop si
-    ; pop cx
 
     jnz .sector_loop
 

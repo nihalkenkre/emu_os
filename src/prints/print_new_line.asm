@@ -7,8 +7,8 @@
 
 [bits 16]
 print_new_line:
-	; push bp
-	; mov bp, sp
+	push bp
+	mov bp, sp
 
 	push ax
 
@@ -21,8 +21,8 @@ print_new_line:
 
 	pop ax
 
-	; mov sp, bp
-	; pop bp
+	mov sp, bp
+	pop bp
 
 	ret	
 

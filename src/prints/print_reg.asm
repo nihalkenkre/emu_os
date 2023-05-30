@@ -5,12 +5,17 @@
 
 sample:			db '0123456789ABCDEF'
 
+;
 ; Params:
 ;	si		: the label to be printed
 ;	sp + 4	: the value to be printed
 ;	cx		: the length of the label
+;
 [bits 16]
 print_reg:
+	push bp
+	mov bp, sp
+
 	call print_string
 
 	push si
@@ -48,6 +53,9 @@ print_reg:
 
 	pop bx
 	pop si
+
+	push sp, bp
+	pop bp
 
 	ret
 

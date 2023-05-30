@@ -3,17 +3,14 @@
 
 [bits 16]
 draw_something:
+	push bp
+	mov bp, sp
+
 	pusha
 
 	mov ah, 0			; Set video mode
 	mov al, 0x13		; Set graphical mode
 	int 0x10
-
-	; mov ah, 0xc			; Change color for a single pixel
-	; mov al, 0xf			; Pixel color
-	; mov cx, 200			; Column
-	; mov dx, 100			; Row
-	; int 0x10
 
 	mov ax, 0xa000
 	mov es, ax
@@ -36,6 +33,9 @@ draw_something:
 	rep stosb
 
 	popa
+
+	mov sp, bp
+	pop bp
 
 	ret
 
