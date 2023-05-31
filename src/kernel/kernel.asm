@@ -10,14 +10,17 @@ start:
 %include "./src/draw/draw.asm"
 %include "./src/prints/print_string.asm"
 %include "./src/prints/print_new_line.asm"
+%include "./src/io/load_apps_from_table.asm"
 
+;
+; ebx: start sector of kernel data
+; ecx: number of sectors for kernel data
+;
 [bits 16]
 main:
 	mov si, msg_hello_kernel
 	call print_string
 	call print_new_line
-
-
 
 .return:
 	mov si, msg_bye_kernel

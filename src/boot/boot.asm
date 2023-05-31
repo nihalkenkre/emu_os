@@ -42,14 +42,14 @@ main:
     jmp .file_not_found
 
 .file_found:
-    ;; Load the kernel data to 0x8000
-    ;; Calculate the number of sectors to load
+    ; Load the kernel data to 0x8000
+    ; Calculate the number of sectors to load
 
-    ;; cx contains the size of the file,
+    ; cx contains the size of the file,
     xor edx, edx
     xor eax, eax
 
-    mov eax, ecx              ; move the size of the file to ax
+    mov eax, ecx            ; move the size of the file to ax
     mov ecx, 512
     div ecx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
@@ -64,12 +64,12 @@ main:
     xor ecx, ecx
     mov cl, al              ; move number of sectors to cl
 
-    ;; calculate the start sector number to load
-    ;; (offset of the file / the size of 1 sector) + 1
+    ; calculate the start sector number to load
+    ; (offset of the file / the size of 1 sector) + 1
     xor edx, edx
     xor eax, eax
 
-    mov eax, ebx              ; move the offset of the file to ax
+    mov eax, ebx            ; move the offset of the file to ax
     mov ecx, 512
     div ecx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
@@ -89,8 +89,6 @@ main:
 
 .file_not_found:
     mov si, kernel_not_found
-    ; xor cx, cx
-    ; mov cl, [kernel_not_found_len]
     call print_string
 
     jmp .halt
@@ -107,10 +105,7 @@ emufs_filename_len equ 10          ; table entry has 10 bytes for filename
 emufs_table_size equ 512
 
 kernel_filename: db 'kernel.bin'
-; kernel_found: db 'kernel found...'
-; kernel_found_len: db ($ - kernel_found)
 kernel_not_found: db 'kernel not found...'
-kernel_not_found_len: db ($ - kernel_not_found)
 
 
 times 510 - ($ - $$) db 0
