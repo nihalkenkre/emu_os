@@ -46,38 +46,38 @@ main:
     ; Calculate the number of sectors to load
 
     ; cx contains the size of the file,
-    xor edx, edx
-    xor eax, eax
+    xor dx, dx
+    xor ax, ax
 
-    mov eax, ecx            ; move the size of the file to ax
-    mov ecx, 512
-    div ecx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov ax, cx            ; move the size of the file to ax
+    mov cx, 512
+    div cx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
-    cmp edx, 0
+    cmp dx, 0
     je .calculate_start_sector
 
-    inc eax                 ; Assumption is if edx is not 0, it will be between 0 and 512, so need to load one more sector
+    inc ax                 ; Assumption is if edx is not 0, it will be between 0 and 512, so need to load one more sector
 
 .calculate_start_sector:
-    push eax                ; push number of sectors to load for later use
+    push ax                ; push number of sectors to load for later use
 
-    xor ecx, ecx
+    xor cx, cx
     mov cl, al              ; move number of sectors to cl
 
     ; calculate the start sector number to load
     ; (offset of the file / the size of 1 sector) + 1
-    xor edx, edx
-    xor eax, eax
+    xor dx, dx
+    xor ax, ax
 
-    mov eax, ebx            ; move the offset of the file to ax
-    mov ecx, 512
-    div ecx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov ax, bx            ; move the offset of the file to ax
+    mov cx, 512
+    div cx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
-    inc eax                 ; + 1
+    inc ax                 ; + 1
 
-    mov ebx, eax            ; move start sector to ebx for load_sectors
-    pop eax                 ; get the number of sectors back
-    mov ecx, eax            ; move the number of sectors to ecx for load_sectors
+    mov bx, ax            ; move start sector to ebx for load_sectors
+    pop ax                 ; get the number of sectors back
+    mov cx, ax            ; move the number of sectors to ecx for load_sectors
 
     mov di, 0x8000          ; load the file data to 0x8000
 
