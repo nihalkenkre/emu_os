@@ -45,6 +45,7 @@ main:
     ; Load the kernel data to 0x8000
     ; Calculate the number of sectors to load
 
+.calculate_num_sectors:
     ; cx contains the size of the file,
     xor dx, dx
     xor ax, ax
