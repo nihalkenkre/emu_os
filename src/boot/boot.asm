@@ -51,13 +51,13 @@ main:
     xor ax, ax
 
     mov ax, cx            ; move the size of the file to ax
-    mov cx, 512
+    mov cx, sector_size
     div cx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
     cmp dx, 0
     je .calculate_start_sector
 
-    inc ax                 ; Assumption is if edx is not 0, it will be between 0 and 512, so need to load one more sector
+    inc ax                 ; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
 
 .calculate_start_sector:
     push ax                ; push number of sectors to load for later use
@@ -71,8 +71,8 @@ main:
     xor ax, ax
 
     mov ax, bx            ; move the offset of the file to ax
-    mov cx, 512
-    div cx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov cx, sector_size
+    div cx                 ; always divides the value in dx:ax by the operand. quotient in ax, remainder in dx
 
     inc ax                 ; + 1
 
@@ -104,6 +104,7 @@ main:
 
 emufs_filename_len equ 10          ; table entry has 10 bytes for filename
 emufs_table_size equ 512
+sector_size equ 512
 
 kernel_filename: db 'kernel.bin'
 kernel_not_found: db 'kernel not found...'

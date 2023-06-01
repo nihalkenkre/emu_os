@@ -1,6 +1,7 @@
 %ifndef LOAD_APPS_FROM_TABLE
 %define LOAD_APPS_FROM_TABLE
 
+%include "./src/io/load_sectors.asm"
 ;
 ; Load the app data from the emufs table into memory starting
 ; at 0x8000 + kernel size
@@ -14,6 +15,7 @@ load_apps_from_table:
     push bp
     mov bp, sp
 
+    push ax
     push bx
     push cx
 	push dx
@@ -23,7 +25,7 @@ load_apps_from_table:
 	mov di, 0x8000  		; This is the destination for the file data copy. This will be popped and pushed as needed
 	mov ax, sector_size
 	mul cx					; Mult sector size with the number of sectors for kernel
-	add di, cx				; Add to the destination
+	add di, ax				; Add to the destination
 	push di
 
 	; Calculate the maximum number of apps in the emufs table
@@ -63,7 +65,41 @@ load_apps_from_table:
 	pop di							; get the destination 0x8000 + kernel size + file sizes
 
 .calculate_num_sectors:
+	push dx							; push the loop index for later use
+
+	xor dx, dx
+	xor	ax, ax
+
+	push cx							; push the table entry count
+
+	mov ax, [emufs_table_entry_size_value]
+	mov cx, sector_size
+	div cx							; divides dx:ax by operand, quotient in ax, remainder in dx
+
+	cmp dx, 0
+	je .calculate_start_sector
+
+	inc ax							; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
+	
 .calculate_start_sector:
+	push ax							; push the number of sectors to later use
+
+	xor dx, dx
+	xor ax, ax
+	mov ax, [emufs_table_entry_offset_value]
+	mov cx, sector_size
+	div cx
+
+	inc ax
+	mov bx, ax
+
+	pop ax
+	mov cx, ax
+
+	call load_sectors
+
+	pop cx
+	pop dx
 
 	inc dx
 	cmp dx, cx

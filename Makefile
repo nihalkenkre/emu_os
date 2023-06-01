@@ -15,6 +15,7 @@ $(BUILD_DIR)/main_floppy.img: boot kernel
 	dd if=$(BUILD_DIR)/boot.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/rocket.dat
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/rocket.bmp
 
 boot: $(BUILD_DIR)/boot.bin
 
