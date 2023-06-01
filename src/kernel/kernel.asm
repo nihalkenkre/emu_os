@@ -23,6 +23,7 @@ main:
 	call print_new_line
 
 	call load_apps_from_table
+	; call draw_bands
 .return:
 	mov si, msg_bye_kernel
 	call print_string

@@ -26,7 +26,6 @@ load_apps_from_table:
 	mov ax, sector_size
 	mul cx					; Mult sector size with the number of sectors for kernel
 	add di, ax				; Add to the destination
-	push di
 
 	; Calculate the maximum number of apps in the emufs table
 	xor dx, dx
@@ -39,6 +38,7 @@ load_apps_from_table:
 
 
 .table_entry_loop:
+	push di
 	; Load the apps at locations starting at 0x8000 + kernel size
 	push dx							; push the index since it is overriden by the mul
 

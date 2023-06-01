@@ -13,7 +13,10 @@ load_sectors:
     push bp
     mov bp, sp
 
-    pusha
+    push ax
+    push bx
+    push cx
+    push dx
 
     mov dx, 0x1f6
     mov al, 0xa0
@@ -54,7 +57,11 @@ load_sectors:
 
     jnz .sector_loop
 
-    popa
+.return:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
 
     mov sp, bp
     pop bp

@@ -32,7 +32,9 @@ main:
 
     mov di, 0x7e00      ; the data will be copied to es:di - 0:0x7e00
 
+    push di
     call load_sectors
+    pop di
 
     mov si, kernel_filename
     call get_filename_details
