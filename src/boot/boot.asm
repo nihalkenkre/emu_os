@@ -24,7 +24,7 @@ main:
     ; Divide the emufs table size by the size of 1 sector
     xor edx, edx
     mov eax, emufs_table_size       ; Size in bytes of the emufs table to load
-    mov ecx, 512                    ; Size in bytes of 1 sector
+    mov ecx, sector_size            ; Size in bytes of 1 sector
     div ecx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
     mov bl, 2           ; number of the sector to start from, for load_sectors

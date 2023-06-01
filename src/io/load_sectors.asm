@@ -15,7 +15,6 @@ load_sectors:
 
     push ax
     push bx
-    push cx
     push dx
 
     mov dx, 0x1f6
@@ -43,6 +42,7 @@ load_sectors:
     out dx, al
 
 .sector_loop:
+    push cx                 ; push the number of sectors for later comparision
 .loop:
     in al, dx
     test al, 8
@@ -52,14 +52,15 @@ load_sectors:
     mov dx, 0x1f0
     rep insw
 
-    dec bx
-    cmp bx, 0
+    pop cx                  ; pop the number of sectors for comparison
+
+    dec cx
+    cmp cx, 0
 
     jnz .sector_loop
 
 .return:
     pop dx
-    pop cx
     pop bx
     pop ax
 

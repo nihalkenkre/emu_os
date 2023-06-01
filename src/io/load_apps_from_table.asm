@@ -2,6 +2,7 @@
 %define LOAD_APPS_FROM_TABLE
 
 %include "./src/io/load_sectors.asm"
+
 ;
 ; Load the app data from the emufs table into memory starting
 ; at 0x8000 + kernel size
@@ -38,9 +39,9 @@ load_apps_from_table:
 
 
 .table_entry_loop:
-	push di
 	; Load the apps at locations starting at 0x8000 + kernel size
 	push dx							; push the index since it is overriden by the mul
+	push di							; push the latest di after load sectors, for next app location
 
 	mov ax, emufs_table_entry_size
 	mul dx							; the offset from 0x7e00 of the current table entry is in eax
@@ -56,17 +57,12 @@ load_apps_from_table:
 
 	mov di, emufs_table_entry_size_value
 	movsw							; moves word from ds:si to es:di
+	pop di							; restore the latest di after load sectors, for next app location
 	
-	pop dx							; pop the index for loop compare
-
 	cmp [emufs_table_entry_size_value], word 0	; if entry size is 0 there is no file present
 	je .table_entry_end
 
-	pop di							; get the destination 0x8000 + kernel size + file sizes
-
 .calculate_num_sectors:
-	push dx							; push the loop index for later use
-
 	xor dx, dx
 	xor	ax, ax
 
@@ -111,6 +107,7 @@ load_apps_from_table:
 	pop si
 	pop dx
 	pop cx
+	pop bx
 	pop ax
 
     mov sp, bp
