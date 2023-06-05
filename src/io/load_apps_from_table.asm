@@ -28,7 +28,12 @@ load_apps_from_table:
 	mul cx					; Mult sector size with the number of sectors for kernel
 	add di, ax				; Add to the destination
 
+	; App addresses are stored in the sector starting from 0x8200
+	; 0x8200 - the number of apps 
+	; 0x8202::0x83ff -  the 16 bits locations of the app data
+
 	mov [apps.locations], di
+	inc word [apps.locations]
 
 	add di, sector_size			; add 1 sector; this sector is for writing the start location of the app data
 
@@ -100,6 +105,7 @@ load_apps_from_table:
 
 .load_sectors:
 	; mov [apps.locations] + ([apps.count] * 2), di
+	push ax
 	push cx
 	push di
 	push si
@@ -108,9 +114,9 @@ load_apps_from_table:
 	mov di, [apps.locations]
 
 	xor cx, cx
-	mov cl, [apps.count]
+	mov cx, [apps.count]
 
-	cmp cl, 0
+	cmp cx, 0
 	jz .app_count_loop_end
 
 .apps_count_loop:
@@ -120,11 +126,15 @@ load_apps_from_table:
 	jnz .apps_count_loop
 
 .app_count_loop_end:
-	mov [di], [si]
+	; mov di, si
+
+	mov ax, si
+	stosw
 
 	pop si
 	pop di
 	pop cx	
+	pop ax
 
 	inc byte [apps.count]
 	call load_sectors
@@ -137,6 +147,20 @@ load_apps_from_table:
 	jne .table_entry_loop
 
 .table_entry_end:
+
+	; set the 0x8200 to the number of apps
+
+	push si
+	push di
+
+	mov si, apps.count
+	mov ax, 0x8200
+	mov di, ax
+
+	movsw
+
+	pop di
+	pop si
 
 	pop di
 	pop si
@@ -160,6 +184,6 @@ emufs_table_entry_size_value: 	dw 0
 
 apps:
 	.locations: dw 0
-	.count: db 0
+	.count: dw 0
 
 %endif
