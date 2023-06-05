@@ -28,10 +28,9 @@ load_apps_from_table:
 	mul cx					; Mult sector size with the number of sectors for kernel
 	add di, ax				; Add to the destination
 
-	mov [apps.start_location], di
+	mov [apps.locations], di
 
-	add di, 0x200			; add 1 sector; this sector is for writing the start location of the app data
-
+	add di, sector_size			; add 1 sector; this sector is for writing the start location of the app data
 
 	; Calculate the maximum number of apps in the emufs table
 	xor dx, dx
@@ -83,20 +82,51 @@ load_apps_from_table:
 	inc ax							; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
 	
 .calculate_start_sector:
+    ; calculate the start sector number to load
+    ; (offset of the file / the size of 1 sector) + 1
 	push ax							; push the number of sectors to later use
 
 	xor dx, dx
 	xor ax, ax
 	mov ax, [emufs_table_entry_offset_value]
 	mov cx, sector_size
-	div cx
+	div cx							; always divides the value in dx:ax by the operand. quotient in ax, remainder in dx
 
-	inc ax
-	mov bx, ax
+	inc ax							; + 1
+	mov bx, ax						; move start sector to ebx for load_sectors
 
-	pop ax
-	mov cx, ax
+	pop ax							; get back the number of sectors
+	mov cx, ax						; move the number of sectors to ecx for load_sectors
 
+.load_sectors:
+	; mov [apps.locations] + ([apps.count] * 2), di
+	push cx
+	push di
+	push si
+
+	mov si, di
+	mov di, [apps.locations]
+
+	xor cx, cx
+	mov cl, [apps.count]
+
+	cmp cl, 0
+	jz .app_count_loop_end
+
+.apps_count_loop:
+	add di, 2
+
+	dec cx
+	jnz .apps_count_loop
+
+.app_count_loop_end:
+	mov [di], [si]
+
+	pop si
+	pop di
+	pop cx	
+
+	inc byte [apps.count]
 	call load_sectors
 
 	pop cx
@@ -129,7 +159,7 @@ emufs_table_entry_offset_value: dw 0
 emufs_table_entry_size_value: 	dw 0
 
 apps:
-	.start_location: dw 0
-	.num_of_apps: db 0
+	.locations: dw 0
+	.count: db 0
 
 %endif

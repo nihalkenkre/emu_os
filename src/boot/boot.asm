@@ -79,11 +79,12 @@ main:
     inc ax                 ; + 1
 
     mov bx, ax            ; move start sector to ebx for load_sectors
-    pop ax                 ; get the number of sectors back
+    pop ax                 ; get back the number of sectors
     mov cx, ax            ; move the number of sectors to ecx for load_sectors
 
     mov di, 0x8000          ; load the file data to 0x8000
 
+.load_sectors:
     call load_sectors
 
     jmp 0:0x8000

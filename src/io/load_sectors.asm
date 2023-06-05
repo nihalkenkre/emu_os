@@ -56,7 +56,6 @@ load_sectors:
     pop cx                  ; pop the number of sectors for comparison
 
     dec cx
-    cmp cx, 0
 
     jnz .sector_loop
 

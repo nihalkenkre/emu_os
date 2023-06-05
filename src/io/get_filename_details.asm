@@ -57,7 +57,6 @@ get_filename_details:
 
     pop ecx
     dec ecx
-    cmp ecx, 0
     jnz .table_loop
 
     jmp .file_not_found
