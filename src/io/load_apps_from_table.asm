@@ -23,10 +23,15 @@ load_apps_from_table:
 	push si
 	push di
 
-	mov di, 0x8000  		; This is the destination for the file data copy. This will be popped and pushed as needed
+	mov di, 0x8000  		; di contains the destination for the file data copy. This will be popped and pushed as needed
 	mov ax, sector_size
 	mul cx					; Mult sector size with the number of sectors for kernel
 	add di, ax				; Add to the destination
+
+	mov [apps.start_location], di
+
+	add di, 0x200			; add 1 sector; this sector is for writing the start location of the app data
+
 
 	; Calculate the maximum number of apps in the emufs table
 	xor dx, dx
@@ -122,5 +127,9 @@ sector_size equ 512
 
 emufs_table_entry_offset_value: dw 0
 emufs_table_entry_size_value: 	dw 0
+
+apps:
+	.start_location: dw 0
+	.num_of_apps: db 0
 
 %endif
