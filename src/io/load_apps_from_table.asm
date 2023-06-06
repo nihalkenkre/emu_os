@@ -34,6 +34,7 @@ load_apps_from_table:
 
 	mov [apps.locations], di
 	inc word [apps.locations]
+	inc word [apps.locations]
 
 	add di, sector_size			; add 1 sector; this sector is for writing the start location of the app data
 
