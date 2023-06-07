@@ -11,164 +11,164 @@
 ;   bx: start sector of kernel data
 ;   cx: number of sectors of kernel data
 ;
-[bits 32]
+[bits 16]
 load_apps_from_table:
-    push ebp
-    mov ebp, esp
+    push bp
+    mov bp, sp
 
-    push eax
-    push ebx
-    push ecx
-	push edx
-	push esi
-	push edi
+    push ax
+    push bx
+    push cx
+	push dx
+	push si
+	push di
 
-	mov edi, 0x8000  		; di contains the destination for the file data copy. This will be popped and pushed as needed
-	mov eax, sector_size
-	mul ecx					; Mult sector size with the number of sectors for kernel
-	add edi, eax				; Add to the destination
+	mov di, 0x8000  		; di contains the destination for the file data copy. This will be popped and pushed as needed
+	mov ax, sector_size
+	mul cx					; Mult sector size with the number of sectors for kernel
+	add di, ax				; Add to the destination
 
 	; App addresses are stored in the sector starting from 0x8200
 	; 0x8200 - the number of apps 
 	; 0x8202::0x83ff -  the 16 bits locations of the app data
 
-	mov [apps.locations], edi
+	mov [apps.locations], di
 	inc word [apps.locations]
 	inc word [apps.locations]
 
-	add edi, sector_size			; add 1 sector; this sector is for writing the start location of the app data
+	add di, sector_size			; add 1 sector; this sector is for writing the start location of the app data
 
 	; Calculate the maximum number of apps in the emufs table
-	xor edx, edx
-	mov eax, emufs_table_size
-	mov ecx, emufs_table_entry_size
-	div ecx					; ax contains the max number of app entries
+	xor dx, dx
+	mov ax, emufs_table_size
+	mov cx, emufs_table_entry_size
+	div cx					; ax contains the max number of app entries
 
-	mov ecx, eax				; table entry loop counter
-	mov edx, 1				; start from the 2nd file table entry, kernel is the 1st
+	mov cx, ax				; table entry loop counter
+	mov dx, 1				; start from the 2nd file table entry, kernel is the 1st
 
 
 .table_entry_loop:
 	; Load the apps at locations starting at 0x8000 + kernel size
-	push edx							; push the index since it is overriden by the mul
-	push edi							; push the latest di after load sectors, for next app location
+	push dx							; push the index since it is overriden by the mul
+	push di							; push the latest di after load sectors, for next app location
 
-	mov eax, emufs_table_entry_size
-	mul edx							; the offset from 0x7e00 of the current table entry is in eax
+	mov ax, emufs_table_entry_size
+	mul dx							; the offset from 0x7e00 of the current table entry is in eax
 
-	add eax, 0x7e00	 				; ax contains the mem location of the table entry
+	add ax, 0x7e00	 				; ax contains the mem location of the table entry
 
 	; add 10 to get the location of offset
-	add eax, 10
+	add ax, 10
 
-	mov esi, eax
-	mov edi, emufs_table_entry_offset_value
+	mov si, ax
+	mov di, emufs_table_entry_offset_value
 	movsw							; moves word from ds:si to es:di
 
-	mov edi, emufs_table_entry_size_value
+	mov di, emufs_table_entry_size_value
 	movsw							; moves word from ds:si to es:di
-	pop edi							; restore the latest di after load sectors, for next app location
+	pop di							; restore the latest di after load sectors, for next app location
 	
 	cmp [emufs_table_entry_size_value], word 0	; if entry size is 0 there is no file present
 	je .table_entry_end
 
 .calculate_num_sectors:
-	xor edx, edx
-	xor	eax, eax
+	xor dx, dx
+	xor	ax, ax
 
-	push ecx							; push the table entry count
+	push cx							; push the table entry count
 
-	mov eax, [emufs_table_entry_size_value]
-	mov ecx, sector_size
-	div ecx							; divides dx:ax by operand, quotient in ax, remainder in dx
+	mov ax, [emufs_table_entry_size_value]
+	mov cx, sector_size
+	div cx							; divides dx:ax by operand, quotient in ax, remainder in dx
 
-	cmp edx, 0
+	cmp dx, 0
 	je .calculate_start_sector
 
-	inc eax							; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
+	inc ax							; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
 	
 .calculate_start_sector:
     ; calculate the start sector number to load
     ; (offset of the file / the size of 1 sector) + 1
-	push eax							; push the number of sectors to later use
+	push ax							; push the number of sectors to later use
 
-	xor edx, edx
-	xor eax, eax
-	mov eax, [emufs_table_entry_offset_value]
-	mov ecx, sector_size
-	div ecx							; always divides the value in dx:ax by the operand. quotient in ax, remainder in dx
+	xor dx, dx
+	xor ax, ax
+	mov ax, [emufs_table_entry_offset_value]
+	mov cx, sector_size
+	div cx							; always divides the value in dx:ax by the operand. quotient in ax, remainder in dx
 
-	inc eax							; + 1
-	mov ebx, eax						; move start sector to ebx for load_sectors
+	inc ax							; + 1
+	mov bx, ax						; move start sector to ebx for load_sectors
 
-	pop eax							; get back the number of sectors
-	mov ecx, eax						; move the number of sectors to ecx for load_sectors
+	pop ax							; get back the number of sectors
+	mov cx, ax						; move the number of sectors to ecx for load_sectors
 
 .load_sectors:
 	; Store the memory locations of the app data for later use
 
-	push eax
-	push ecx
-	push edi
-	push esi
+	push ax
+	push cx
+	push di
+	push si
 
-	mov eax, edi						; store the value of di into ax since we need to store the value of si
-	mov edi, [apps.locations]
+	mov ax, di						; store the value of di into ax since we need to store the value of si
+	mov di, [apps.locations]
 
-	xor ecx, ecx
-	mov ecx, [apps.count]
+	xor cx, cx
+	mov cx, [apps.count]
 
-	cmp ecx, 0
+	cmp cx, 0
 	jz .app_count_loop_end
 
 .apps_count_loop:
-	add edi, 2						; increment di to get the location where to store the addr of the next app data
+	add di, 2						; increment di to get the location where to store the addr of the next app data
 
-	dec ecx
+	dec cx
 	jnz .apps_count_loop
 
 .app_count_loop_end:
 	stosw							; store the value of ax to the location pointed by es:di
 
-	pop esi
-	pop edi
-	pop ecx	
-	pop eax
+	pop si
+	pop di
+	pop cx	
+	pop ax
 
 	inc byte [apps.count]
 	call load_sectors
 
-	pop ecx
-	pop edx
+	pop cx
+	pop dx
 
-	inc edx
-	cmp edx, ecx
+	inc dx
+	cmp dx, cx
 	jne .table_entry_loop
 
 .table_entry_end:
 
 	; write the number of apps to 0x8200
 
-	push esi
-	push edi
+	push si
+	push di
 
-	mov esi, apps.count
-	mov edi, 0x8200
+	mov si, apps.count
+	mov di, 0x8200
 
 	movsw
 
-	pop edi
-	pop esi
+	pop di
+	pop si
 
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
 
-    mov esp, ebp
-    pop ebp
+    mov sp, bp
+    pop bp
 
     ret
 
