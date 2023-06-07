@@ -12,6 +12,30 @@ start:
 %include "./src/prints/print_new_line.asm"
 %include "./src/io/load_apps_from_table.asm"
 
+[bits 16]
+switch_to_32_bits:
+	cli
+
+	lgdt [gdt_desc]
+
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
+
+	jmp CODESEG:start_protected_mode
+
+
+[bits 32]
+start_protected_mode:
+	mov ax, DATASEG
+	mov ds, ax
+	mov ss, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	hlt
+
 ;
 ; ebx: start sector of kernel data
 ; ecx: number of sectors for kernel data
@@ -22,7 +46,9 @@ main:
 	call print_string
 	call print_new_line
 
-	call load_apps_from_table
+	jmp switch_to_32_bits
+
+	; call load_apps_from_table
 
 	; 0x8200 - the number of apps 
 	; 0x8202::0x83ff -  the 16 bits locations of the app data
@@ -63,5 +89,32 @@ main:
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
+
+gdt_start:
+	.null: 
+		dd 0
+		dd 0
+	.code:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x9a
+		db 11001111b
+		db 0
+	.data:
+		dw 0xffff
+		dw 0
+		db 0
+		db 0x92
+		db 11001111b
+		db 0
+gdt_end:
+
+gdt_desc:
+	.size:  	dw (gdt_end - gdt_start - 1)
+	.offset: 	dd gdt_start
+
+CODESEG equ gdt_start.code - gdt_start
+DATASEG equ gdt_start.data - gdt_start
 
 %endif

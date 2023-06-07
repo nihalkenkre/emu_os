@@ -153,7 +153,8 @@ load_apps_from_table:
 	push di
 
 	mov si, apps.count
-	mov di, 0x8200
+	mov di, [apps.locations]			; get apps.locations and substract 2 to get the mem loc to store app count
+	sub di, 2
 
 	movsw
 
