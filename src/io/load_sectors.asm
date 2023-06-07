@@ -15,7 +15,7 @@ load_sectors:
 
     push ax
     push bx
-    push cx                 ; pop the number of sectors for later use
+    push cx                 ; push the number of sectors for later use
     push dx
 
     mov dx, 0x1f6
@@ -44,6 +44,7 @@ load_sectors:
 
 .sector_loop:
     push cx                 ; push the number of sectors for later comparision
+
 .loop:
     in al, dx
     test al, 8

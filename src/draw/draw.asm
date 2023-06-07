@@ -17,19 +17,19 @@ draw_bands:
 	mov di, 0x0000
 	
 	mov cx, 160 * 100
-	mov al, 0xaa
+	mov al, 0xfc
 	rep stosb
 
 	mov cx, 160 * 100
-	mov al, 0x01
+	mov al, 0x03
 	rep stosb
 
 	mov cx, 160 * 100
-	mov al, 0x05
+	mov al, 0x02
 	rep stosb
 
 	mov cx, 160 * 100
-	mov al, 0x04
+	mov al, 0xe0
 	rep stosb
 
 	popa

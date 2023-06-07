@@ -34,6 +34,7 @@ load_apps_from_table:
 
 	mov [apps.locations], di
 	inc word [apps.locations]
+	inc word [apps.locations]
 
 	add di, sector_size			; add 1 sector; this sector is for writing the start location of the app data
 
@@ -104,13 +105,14 @@ load_apps_from_table:
 	mov cx, ax						; move the number of sectors to ecx for load_sectors
 
 .load_sectors:
-	; mov [apps.locations] + ([apps.count] * 2), di
+	; Store the memory locations of the app data for later use
+
 	push ax
 	push cx
 	push di
 	push si
 
-	mov si, di
+	mov ax, di						; store the value of di into ax since we need to store the value of si
 	mov di, [apps.locations]
 
 	xor cx, cx
@@ -120,16 +122,13 @@ load_apps_from_table:
 	jz .app_count_loop_end
 
 .apps_count_loop:
-	add di, 2
+	add di, 2						; increment di to get the location where to store the addr of the next app data
 
 	dec cx
 	jnz .apps_count_loop
 
 .app_count_loop_end:
-	; mov di, si
-
-	mov ax, si
-	stosw
+	stosw							; store the value of ax to the location pointed by es:di
 
 	pop si
 	pop di
@@ -148,14 +147,13 @@ load_apps_from_table:
 
 .table_entry_end:
 
-	; set the 0x8200 to the number of apps
+	; write the number of apps to 0x8200
 
 	push si
 	push di
 
 	mov si, apps.count
-	mov ax, 0x8200
-	mov di, ax
+	mov di, 0x8200
 
 	movsw
 
