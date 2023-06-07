@@ -89,6 +89,7 @@ main:
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
+<<<<<<< HEAD
 
 gdt_start:
 	.null: 
@@ -116,5 +117,7 @@ gdt_desc:
 
 CODESEG equ gdt_start.code - gdt_start
 DATASEG equ gdt_start.data - gdt_start
+=======
+>>>>>>> 709cccef0bbbf07f9bc0318c97203318987fb8d0
 
 %endif
