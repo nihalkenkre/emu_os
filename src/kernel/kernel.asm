@@ -12,29 +12,29 @@ start:
 %include "./src/prints/print_new_line.asm"
 %include "./src/io/load_apps_from_table.asm"
 
-[bits 16]
-switch_to_32_bits:
-	cli
+; [bits 16]
+; switch_to_32_bits:
+; 	cli
 
-	lgdt [gdt_desc]
+; 	lgdt [gdt_desc]
 
-	mov eax, cr0
-	or eax, 0x1
-	mov cr0, eax
+; 	mov eax, cr0
+; 	or eax, 0x1
+; 	mov cr0, eax
 
-	jmp CODESEG:start_protected_mode
+; 	jmp CODESEG:start_protected_mode
 
 
-[bits 32]
-start_protected_mode:
-	mov ax, DATASEG
-	mov ds, ax
-	mov ss, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
+; [bits 32]
+; start_protected_mode:
+; 	mov ax, DATASEG
+; 	mov ds, ax
+; 	mov ss, ax
+; 	mov es, ax
+; 	mov fs, ax
+; 	mov gs, ax
 
-	hlt
+; 	hlt
 
 ;
 ; ebx: start sector of kernel data
@@ -46,7 +46,7 @@ main:
 	call print_string
 	call print_new_line
 
-	jmp switch_to_32_bits
+	; jmp switch_to_32_bits
 
 	; call load_apps_from_table
 
@@ -89,7 +89,6 @@ main:
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
-<<<<<<< HEAD
 
 gdt_start:
 	.null: 
@@ -117,7 +116,5 @@ gdt_desc:
 
 CODESEG equ gdt_start.code - gdt_start
 DATASEG equ gdt_start.data - gdt_start
-=======
->>>>>>> 709cccef0bbbf07f9bc0318c97203318987fb8d0
 
 %endif
