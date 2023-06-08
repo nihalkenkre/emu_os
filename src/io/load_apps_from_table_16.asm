@@ -1,7 +1,7 @@
-%ifndef LOAD_APPS_FROM_TABLE
-%define LOAD_APPS_FROM_TABLE
+%ifndef LOAD_APPS_FROM_TABLE_16
+%define LOAD_APPS_FROM_TABLE_16
 
-%include "./src/io/load_sectors.asm"
+%include "./src/io/load_sectors_16.asm"
 
 ;
 ; Load the app data from the emufs table into memory starting

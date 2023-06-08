@@ -46,5 +46,8 @@ always:
 run: 
 	qemu-system-x86_64 -drive format=raw,file=$(BUILD_DIR)/main_floppy.img -m 1024
 
+debug:
+	bochs -f bochs.config
+
 clean:
 	rm -fr $(BUILD_DIR)/*

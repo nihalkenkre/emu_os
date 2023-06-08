@@ -6,12 +6,12 @@ An operating system written from scratch to eventually run the Chip8 apps and la
 ## Data Layout of the Disk.
 
 - The bootloader is stored in the first 512 bytes of the disk.
-- The EMU File Table is stored in the next 4096 bytes.
+- The EMU File Table is stored in the next 512 bytes.
 - The table contains table entry of the format
 ```
     uint8_t file_name[10];
-    uint16_t file_offset;
-    uint16_t file_size + padding bytes to the next 512 byte boundary
+    uint32_t file_offset;
+    uint32_t file_size + padding bytes to the next 512 byte boundary
 ```
 - The raw file data is stored after the EMU File Table
 

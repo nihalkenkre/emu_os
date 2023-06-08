@@ -8,6 +8,8 @@ start:
 	jmp main
 
 %include "./src/draw/draw_32.asm"
+%include "./src/io/load_apps_from_table_32.asm"
+%include "./src/io/load_sectors_32.asm"
 
 ;
 ; ebx: start sector of kernel data
@@ -16,7 +18,7 @@ start:
 
 [bits 16]
 main:
-	mov ax, 0x0013				; set graphics mode
+	mov ax, 0x0013				; set video mode to graphics mode
 	int 0x10
 
 	jmp switch_to_32_bits
@@ -51,6 +53,7 @@ start_protected_mode:
 	mov fs, ax
 	mov gs, ax
 
+	call load_apps_from_table
 	call draw_bands
 
 	hlt

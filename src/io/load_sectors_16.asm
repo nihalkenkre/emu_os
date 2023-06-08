@@ -1,5 +1,5 @@
-%ifndef LOAD_SECTORS
-%define LOAD_SECTORS
+%ifndef LOAD_SECTORS_16
+%define LOAD_SECTORS_16
 
 ;
 ; Load sectors from the master hard disk into memory
@@ -57,7 +57,6 @@ load_sectors:
     pop cx                  ; pop the number of sectors for comparison
 
     dec cx
-
     jnz .sector_loop
 
 .return:

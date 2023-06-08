@@ -101,8 +101,8 @@ main:
     cli
     hlt
 
-%include "./src/io/load_sectors.asm"
-%include "./src/io/get_filename_details.asm"
+%include "./src/io/load_sectors_16.asm"
+%include "./src/io/get_filename_details_16.asm"
 %include "./src/prints/print_string.asm"
 
 emufs_filename_len equ 10          ; table entry has 10 bytes for filename

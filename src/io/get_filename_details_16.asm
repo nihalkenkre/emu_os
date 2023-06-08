@@ -1,5 +1,5 @@
-%ifndef GET_FILENAME_DETAILS
-%define GET_FILENAME_DETAILS
+%ifndef GET_FILENAME_DETAILS_16
+%define GET_FILENAME_DETAILS_16
 
 emufs_filename_entry equ 10
 emufs_table_size equ 512
@@ -30,7 +30,7 @@ get_filename_details:
     ; find number of table entries in table
     xor edx, edx
     mov eax, emufs_table_size       ; emufs table total size
-    mov ecx, 14                     ; size of table entry: 10 byte file name + 2 byte offset from disk start + 2 byte size
+    mov ecx, 18                     ; size of table entry: 10 byte file name + 4 byte offset from disk start + 4 byte size
     div ecx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
     ; eax contains the number of table entries
@@ -49,7 +49,7 @@ get_filename_details:
 
     ; Jump to the next table entry;
     add di, cx          ; add the remaining number of bytes to di
-    add di, 4           ; and 2 bytes for offset; add 2 bytes for size
+    add di, 8           ; and 4 bytes for offset; add 4 bytes for size
 
     mov bx, emufs_filename_len       
     sub bx, cx          ; Get the number chars that were matched
