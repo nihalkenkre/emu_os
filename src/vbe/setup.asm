@@ -33,33 +33,33 @@ setup_vbe:
 	; VbeFarPtr is in segment:offset format, since data is laid out in little endian format
 	; the 'MSW' goes to the offset, and the 'LSW' goes to the segment.
 	;
-	; push ds
-	; mov si, word [vbe_info_block.oem_string]
-	; mov ds, word [vbe_info_block.oem_string + 2]
-	; call print_string
-	; call print_new_line
-	; pop ds
+	push ds
+	mov si, word [vbe_info_block.oem_string]
+	mov ds, word [vbe_info_block.oem_string + 2]
+	call print_string
+	call print_new_line
+	pop ds
 	
-	; push ds
-	; mov si, word [vbe_info_block.oem_vendor_name_ptr]
-	; mov ds, word [vbe_info_block.oem_vendor_name_ptr + 2]
-	; call print_string
-	; call print_new_line
-	; pop ds
+	push ds
+	mov si, word [vbe_info_block.oem_vendor_name_ptr]
+	mov ds, word [vbe_info_block.oem_vendor_name_ptr + 2]
+	call print_string
+	call print_new_line
+	pop ds
 
-	; push ds
-	; mov si, word [vbe_info_block.oem_product_name_ptr]
-	; mov ds, word [vbe_info_block.oem_product_name_ptr + 2]
-	; call print_string
-	; call print_new_line
-	; pop ds
+	push ds
+	mov si, word [vbe_info_block.oem_product_name_ptr]
+	mov ds, word [vbe_info_block.oem_product_name_ptr + 2]
+	call print_string
+	call print_new_line
+	pop ds
 
-	; push ds
-	; mov si, word [vbe_info_block.oem_product_rev_ptr]
-	; mov ds, word [vbe_info_block.oem_product_rev_ptr + 2]
-	; call print_string
-	; call print_new_line
-	; pop ds
+	push ds
+	mov si, word [vbe_info_block.oem_product_rev_ptr]
+	mov ds, word [vbe_info_block.oem_product_rev_ptr + 2]
+	call print_string
+	call print_new_line
+	pop ds
 
 	; Get supported VBE modes
 	mov si, word [vbe_info_block.video_mode_ptr]
@@ -82,7 +82,7 @@ setup_vbe:
 	cmp al, 0x4f			; Check if function supported
 	jne .func_not_supported
 
-	cmp ah, 0
+	cmp ah,	0				; Check if function call failed
 	jne .func_call_failed
 
 	mov dx, [req_x_res]

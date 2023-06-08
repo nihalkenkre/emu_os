@@ -1,5 +1,5 @@
 ;
 ; Used for testing disk IO
-; Fill 480 bytes with 0xBB
 ;
+[bits 16]
 times 455 db 0xBB
