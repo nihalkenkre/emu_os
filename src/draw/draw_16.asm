@@ -1,5 +1,5 @@
-%ifndef DRAW
-%define DRAW
+%ifndef DRAW_16
+%define DRAW_16
 
 [bits 16]
 draw_bands:
