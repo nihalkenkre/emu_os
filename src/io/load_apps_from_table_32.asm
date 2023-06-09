@@ -28,14 +28,15 @@ load_apps_from_table:
     add edi, eax                    ; Add to the destination
 
     ; App addresses are stored in the sector after the kernel sectors
-    ; first two bytes for the number of apps
-    ; byte 3::byte 512 - 16 bit locations of the app data
+    ; first four bytes for the number of apps
+    ; byte 5::byte 512 - 32 bit locations of the app data
 
     mov [apps.locations], edi
 	add dword [apps.locations], 4
 
-    add edi, sector_size
+    add edi, sector_size 			; Add one sector to to store the actual app data
 
+	; Get number of table entries in the table
     xor edx, edx
     mov eax, emufs_table_size
     mov ecx, emufs_table_entry_size
@@ -59,10 +60,10 @@ load_apps_from_table:
 
 	mov esi, eax
 	mov edi, emufs_table_entry_offset_value
-	movsw							; moves word from ds:si to es:di
+	movsd							; moves word from ds:si to es:di
 
 	mov edi, emufs_table_entry_size_value
-	movsw							; moves word from ds:si to es:di
+	movsd							; moves word from ds:si to es:di
 	pop edi							; restore the latest di after load sectors, for next app location
 	
 	cmp [emufs_table_entry_size_value], word 0	; if entry size is 0 there is no file present
@@ -108,7 +109,7 @@ load_apps_from_table:
 	push edi
 	push esi
 
-	mov eax, edi						; store the value of di into ax since we need to store the value of si
+	mov eax, edi						; store the value of di into ax since we need to store the value of si, at the location pointed by di
 	mov edi, [apps.locations]
 
 	xor ecx, ecx
@@ -124,7 +125,7 @@ load_apps_from_table:
 	jnz .apps_count_loop
 
 .app_count_loop_end:
-    stosw
+    stosd
 
     pop esi
     pop edi

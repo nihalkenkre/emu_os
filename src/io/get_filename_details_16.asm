@@ -13,8 +13,8 @@ emufs_table_size equ 512
 ;
 ; Returns:
 ;   al: 1 if filename found, 0 if filename not found
-;   bx: offset
-;   cx: size
+;   ebx: offset
+;   ecx: size
 ;
 ; di is clobbered
 ;
@@ -29,9 +29,9 @@ get_filename_details:
     ;; Look for the table entry with filename
     ; find number of table entries in table
     xor edx, edx
-    mov eax, emufs_table_size       ; emufs table total size
-    mov ecx, 18                     ; size of table entry: 10 byte file name + 4 byte offset from disk start + 4 byte size
-    div ecx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov eax, emufs_table_size               ; emufs table total size
+    mov ecx, emufs_table_entry_size         ; size of table entry: 10 byte file name + 4 byte offset from disk start + 4 byte size
+    div ecx                                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
     ; eax contains the number of table entries
     ; Loop through table entries to find entry with filename
@@ -67,12 +67,11 @@ get_filename_details:
     xor eax, eax
     mov al, 0x1             ; return file found
 
-    mov bx, word [es:di]    ; return file offset
+    mov ebx, dword [es:di]    ; return file offset
 
-    inc di
-    inc di
+    add di, 4
 
-    mov cx, word [es:di]    ; return 
+    mov ecx, dword [es:di]    ; return 
 
     jmp .return
 
@@ -89,5 +88,7 @@ get_filename_details:
     pop bp
 
     ret
+
+emufs_table_entry_size equ 18
 
 %endif
