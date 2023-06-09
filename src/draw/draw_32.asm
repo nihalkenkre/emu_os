@@ -34,5 +34,28 @@ draw_bands:
 
     ret
 
+;
+; Displays the data at the memory locations starting at si to video memory starting at 0xa0000
+;
+; Params:
+;	esi: starting mem locations
+;	ecx: number of pixels / bytes to copy
+;
+[bits 32]
+draw_image:
+	push ebp
+	mov ebp, esp
+
+	push edi
+	mov edi, 0xa0000
+
+	rep movsb
+
+	pop edi
+
+	mov esp, ebp
+	pop ebp
+
+	ret
 
 %endif
