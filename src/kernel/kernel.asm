@@ -35,8 +35,6 @@ main:
 switch_to_32_bits:
 	cli										; disable interrupts
 
-	; call enable_a20							; enable a20 line
-
 	lgdt [gdt_desc]							; load global descriptor table
 
 	; set the control register value to enter protected mode - currently 16 bit
@@ -45,54 +43,6 @@ switch_to_32_bits:
 	mov cr0, eax
 
 	jmp CODESEG:start_protected_mode		; jump to 32 bit code, which will be 32 bit protected mode
-
-[bits 16]
-enable_a20:
-	; disable keyboard
-	call a20_wait_input
-	mov al, kb_ctrl_disable
-	out kb_ctrl_cmd, al
-
-	call a20_wait_input
-	mov al, kb_ctrl_read
-	out kb_ctrl_cmd, al
-
-	call a20_wait_output
-	in al, kb_ctrl_dat
-	push eax
-
-	call a20_wait_input
-	mov al, kb_ctrl_write
-	out kb_ctrl_cmd, al
-
-	; set bit 2 to 1
-	call a20_wait_input
-	pop eax
-	or al, 2
-	out kb_ctrl_dat, al
-
-	; enable keyboard
-	call a20_wait_output
-	mov al, kb_ctrl_enable
-	out kb_ctrl_cmd, al
-
-	call a20_wait_input
-
-	ret	
-
-[bits 16]
-a20_wait_input:
-	in al, kb_ctrl_cmd
-	test al, 2
-	jnz a20_wait_input
-	ret
-
-[bits 16]
-a20_wait_output:
-	in al, kb_ctrl_cmd
-	test al, 1
-	jnz a20_wait_output
-	ret
 
 [bits 32]
 start_protected_mode:
