@@ -24,7 +24,6 @@ main:
 	jmp switch_to_32_bits
 
 .return:
-
 	cli
 	hlt
 
@@ -36,15 +35,14 @@ main:
 switch_to_32_bits:
 	cli										; disable interrupts
 
+	; call enable_a20							; enable a20 line
+
 	lgdt [gdt_desc]							; load global descriptor table
 
 	; set the control register value to enter protected mode - currently 16 bit
 	mov eax, cr0
 	or eax, 0x1
 	mov cr0, eax
-
-	; Enable A20 line
-	call enable_a20
 
 	jmp CODESEG:start_protected_mode		; jump to 32 bit code, which will be 32 bit protected mode
 
@@ -68,13 +66,13 @@ enable_a20:
 	out kb_ctrl_cmd, al
 
 	; set bit 2 to 1
-	call a20_wait_output
+	call a20_wait_input
 	pop eax
 	or al, 2
 	out kb_ctrl_dat, al
 
 	; enable keyboard
-	call a20_wait_input
+	call a20_wait_output
 	mov al, kb_ctrl_enable
 	out kb_ctrl_cmd, al
 
@@ -109,6 +107,8 @@ start_protected_mode:
 	mov esi, [0x8404]
 	mov ecx, 320 * 200
 	call draw_image
+
+	; call draw_bands
 
 	hlt
 
