@@ -23,23 +23,23 @@ load_sectors:
     out dx, al
 
     mov dx, 0x1f2
-    mov al, cl
+    mov al, cl              ; the number of sectors to read
     out dx, al
 
     mov dx, 0x1f3
-    mov al, bl
+    mov al, bl              ; the first sector number to read
     out dx, al
 
     mov dx, 0x1f4
-    xor al, al
+    xor al, al              ; high cylinder value 0
     out dx, al
 
     mov dx, 0x1f5
-    xor al, al
+    xor al, al              ; Low cylinder value 0
     out dx, al
 
     mov dx, 0x1f7
-    mov al, 0x20
+    mov al, 0x20            ; 0x20 for read operation
     out dx, al
 
 .sector_loop:

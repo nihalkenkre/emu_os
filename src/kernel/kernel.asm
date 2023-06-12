@@ -34,15 +34,67 @@ main:
 
 [bits 16]
 switch_to_32_bits:
-	cli
+	cli										; disable interrupts
 
-	lgdt [gdt_desc]
+	lgdt [gdt_desc]							; load global descriptor table
 
+	; set the control register value to enter protected mode - currently 16 bit
 	mov eax, cr0
 	or eax, 0x1
 	mov cr0, eax
 
-	jmp CODESEG:start_protected_mode
+	; Enable A20 line
+	call enable_a20
+
+	jmp CODESEG:start_protected_mode		; jump to 32 bit code, which will be 32 bit protected mode
+
+[bits 16]
+enable_a20:
+	; disable keyboard
+	call a20_wait_input
+	mov al, kb_ctrl_disable
+	out kb_ctrl_cmd, al
+
+	call a20_wait_input
+	mov al, kb_ctrl_read
+	out kb_ctrl_cmd, al
+
+	call a20_wait_output
+	in al, kb_ctrl_dat
+	push eax
+
+	call a20_wait_input
+	mov al, kb_ctrl_write
+	out kb_ctrl_cmd, al
+
+	; set bit 2 to 1
+	call a20_wait_output
+	pop eax
+	or al, 2
+	out kb_ctrl_dat, al
+
+	; enable keyboard
+	call a20_wait_input
+	mov al, kb_ctrl_enable
+	out kb_ctrl_cmd, al
+
+	call a20_wait_input
+
+	ret	
+
+[bits 16]
+a20_wait_input:
+	in al, kb_ctrl_cmd
+	test al, 2
+	jnz a20_wait_input
+	ret
+
+[bits 16]
+a20_wait_output:
+	in al, kb_ctrl_cmd
+	test al, 1
+	jnz a20_wait_output
+	ret
 
 [bits 32]
 start_protected_mode:
@@ -89,5 +141,12 @@ DATASEG equ gdt_start.data - gdt_start
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
+
+kb_ctrl_cmd 	equ 0x64
+kb_ctrl_dat 	equ 0x60
+kb_ctrl_disable equ 0xad
+kb_ctrl_enable 	equ 0xae
+kb_ctrl_read 	equ 0xd0
+kb_ctrl_write 	equ 0xd1
 
 %endif

@@ -14,7 +14,7 @@ $(BUILD_DIR)/main_floppy.img: boot kernel test
 	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img count=28800
 	dd if=$(BUILD_DIR)/boot.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
-	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/RGB8.dat
+	# ../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/RGB8.dat
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/a.bin
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/b.bin
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/c.bin
@@ -44,7 +44,7 @@ always:
 	mkdir -p $(BUILD_DIR)
 
 run: 
-	qemu-system-x86_64 -drive format=raw,file=$(BUILD_DIR)/main_floppy.img -m 1024
+	qemu-system-i386 -drive format=raw,file=$(BUILD_DIR)/main_floppy.img -m 1024
 
 debug:
 	bochs -f bochs.config
