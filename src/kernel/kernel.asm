@@ -92,11 +92,5 @@ DATASEG equ gdt_start.data - gdt_start
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
 
-kb_ctrl_cmd 	equ 0x64
-kb_ctrl_dat 	equ 0x60
-kb_ctrl_disable equ 0xad
-kb_ctrl_enable 	equ 0xae
-kb_ctrl_read 	equ 0xd0
-kb_ctrl_write 	equ 0xd1
 
 %endif

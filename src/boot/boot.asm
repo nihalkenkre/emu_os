@@ -7,6 +7,10 @@ bits 16
 start:
     jmp main
 
+%include "./src/io/load_sectors_16.asm"
+%include "./src/io/get_filename_details_16.asm"
+%include "./src/prints/print_string.asm"
+
 main:
     mov ax, 0
     mov ds, ax
@@ -97,10 +101,6 @@ main:
 .halt:
     cli
     hlt
-
-%include "./src/io/load_sectors_16.asm"
-%include "./src/io/get_filename_details_16.asm"
-%include "./src/prints/print_string.asm"
 
 emufs_filename_len equ 10          ; table entry has 10 bytes for filename
 emufs_table_size equ 512
