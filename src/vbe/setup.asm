@@ -1,8 +1,12 @@
 %ifndef VBE_SETUP
 %define VBE_SETUP
 
+
+%include "./src/prints/print_string.asm"
+%include "./src/prints/print_new_line.asm"
+
 ;
-; Setup VESA BIOS Extension for 640 x 480, 32 bpp
+; Setup VESA BIOS Extension for 640 x 480, 8 bpp
 ;
 ; Returns:
 ;	ax: 0 		VBE mode successfully set
@@ -11,7 +15,6 @@
 ;		3		VBE mode not found
 ;		4		VBE mode not available
 ;
-
 [bits 16]
 setup_vbe:
 	push bp
@@ -110,25 +113,29 @@ setup_vbe:
 .func_not_supported:
 	popa
 	mov ax, 0x1
-
+	mov sp, bp
+	pop bp
 	ret
 
 .func_call_failed:
 	popa
 	mov ax, 0x2
-
+	mov sp, bp
+	pop bp
 	ret
 
 .vbe_mode_not_found:
 	popa
 	mov ax, 0x3
-
+	mov sp, bp
+	pop bp
 	ret
 
 .mode_not_available:
 	popa
 	mov ax, 0x4
-
+	mov sp, bp
+	pop bp
 	ret
 
 .return:
@@ -139,5 +146,8 @@ setup_vbe:
 	pop bp
 
 	ret
+
+%include "./src/vbe/setup_data.asm"
+%include "./src/vbe/info_blocks.asm"
 
 %endif

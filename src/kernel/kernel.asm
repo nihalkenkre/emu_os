@@ -7,10 +7,10 @@ bits 16
 start:
 	jmp main
 
-%include "./src/draw/draw_32.asm"
 %include "./src/io/load_apps_from_table_32.asm"
-%include "./src/io/load_sectors_32.asm"
-
+%include "./src/vbe/setup.asm"
+%include "./src/vbe/draw/draw_vbe.asm"
+%include "./src/vbe/prints/print_string.asm"
 ;
 ; ebx: start sector of kernel data
 ; ecx: number of sectors for kernel data
@@ -18,16 +18,56 @@ start:
 
 [bits 16]
 main:
-	mov ax, 0x0013				; set video mode to graphics mode
-	int 0x10
+	mov si, msg_hello_kernel
+	call print_string
+	call print_new_line
+
+	call setup_vbe
+	cmp al, 0
+	jne .vbe_error
 
 	jmp switch_to_32_bits
 
-.return:
-	cli
-	hlt
+.vbe_error:
+	cmp al, 1
+	je .vbe_func_not_supported
 
-.halt:
+	cmp al, 2
+	je .vbe_func_call_failed
+
+	cmp al, 3
+	je .vbe_mode_not_found
+
+	cmp al, 4
+	je .vbe_mode_not_available
+
+	jmp .return
+
+.vbe_func_not_supported:
+	mov si, msg_vbe_func_not_supported
+	jmp .print_error_string
+
+.vbe_func_call_failed:
+	mov si, msg_vbe_func_call_failed
+	jmp .print_error_string
+
+.vbe_mode_not_found:
+	mov si, msg_vbe_mode_not_found
+	jmp .print_error_string
+
+.vbe_mode_not_available:
+	mov si, msg_vbe_mode_not_available
+	jmp .print_error_string
+
+.print_error_string:
+	call print_string
+	call print_new_line
+
+.return:
+	mov si, msg_bye_kernel
+	call print_string
+	call print_new_line
+
 	cli
 	hlt
 
@@ -53,12 +93,8 @@ start_protected_mode:
 	mov fs, ax
 	mov gs, ax
 
-	call load_apps_from_table
-	mov esi, [0x8200]
-	mov ecx, 320 * 200
-	call draw_image
-
-	; call draw_bands
+	; call draw_vbe
+	call print_string_vbe
 
 	hlt
 
@@ -91,6 +127,5 @@ DATASEG equ gdt_start.data - gdt_start
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
-
 
 %endif
