@@ -54,7 +54,7 @@ start_protected_mode:
 	mov gs, ax
 
 	call load_apps_from_table
-	mov esi, [0x8404]
+	mov esi, [0x8200]
 	mov ecx, 320 * 200
 	call draw_image
 

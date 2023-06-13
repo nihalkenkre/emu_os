@@ -64,9 +64,6 @@ main:
 .calculate_start_sector:
     push ax                ; push number of sectors to load for later use
 
-    xor cx, cx
-    mov cl, al              ; move number of sectors to cl
-
     ; calculate the start sector number to load
     ; (offset of the file / the size of 1 sector) + 1
     xor dx, dx
