@@ -8,16 +8,89 @@ print_string_vbe:
     push ebp
     mov ebp, esp
 
-    mov esi, alphabet
+    mov esi, test_string
     mov edi, [mode_info_block.phy_base_ptr]
+    ; add edi, 0x2680
 
 .loop:
     xor eax, eax
     lodsb
     or al, al
-
     jz .loop_end
+    
+    cmp al, 0x0a
+    je .LF
+
+    cmp al, 0x0d
+    je .CR
+    
+    jmp .print
+
+.LF:
+    xor eax, eax
+    mov ax, [mode_info_block.lin_bytes_per_scan_line]
+
+    xor ebx, ebx
+    mov bl, [mode_info_block.y_char_size]
+
+    mul ebx
+
+    add edi, eax
+
+    xor edx, edx
+    xor eax, eax
+
+    mov eax, edi
+    xor ebx, ebx
+    mov bx, [mode_info_block.lin_bytes_per_scan_line]
+    div ebx
+
+    sub edi, edx
+
+    jmp .loop
+
+.CR:
+    xor eax, eax
+    mov ax, [mode_info_block.lin_bytes_per_scan_line]
+
+    xor ebx, ebx
+    mov bl, [mode_info_block.y_char_size]
+
+    mul ebx
+
+    add edi, eax
+
+    xor edx, edx
+    xor eax, eax
+
+    mov eax, edi
+    xor ebx, ebx
+    mov bx, [mode_info_block.lin_bytes_per_scan_line]
+    div ebx
+
+    sub edi, edx
+
+    jmp .loop
+
+.print:
     call print_char_vbe
+
+    mov ebx, edi
+    sub ebx, [mode_info_block.phy_base_ptr]
+
+    xor edx, edx
+    mov dx, [mode_info_block.x_resolution]
+
+    cmp bx, dx
+    jne .loop
+
+    xor eax, eax
+    mov ax, [mode_info_block.lin_bytes_per_scan_line]
+    xor ebx, ebx
+    mov bl, [mode_info_block.y_char_size]
+    mul bx
+
+    add edi, eax
 
     jmp .loop
 
@@ -27,7 +100,7 @@ print_string_vbe:
 
     ret
 
-test_string: db 'DEAD BABE', 0
+test_string: db '==========', 0x0a, 'Who', 0x27,'s', 0x0d, 'there?', 0x0a, '==========', 0
 
 alphabet: db ' '
           db '!'
@@ -80,7 +153,6 @@ alphabet: db ' '
           db 'P'
           db 'Q'
           db 'R'
-          db 0
           db 'S'
           db 'T'
           db 'U'

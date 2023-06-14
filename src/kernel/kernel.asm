@@ -7,15 +7,18 @@ bits 16
 start:
 	jmp main
 
-%include "./src/io/load_apps_from_table_32.asm"
+; 16 bit includes
 %include "./src/vbe/setup.asm"
-%include "./src/vbe/draw/draw_vbe.asm"
+
+; 32 bit includes
+%include "./src/io/load_apps_from_table_32.asm"
+%include "./src/vbe/draw/clear_screen.asm"
 %include "./src/vbe/prints/print_string.asm"
+
 ;
 ; ebx: start sector of kernel data
 ; ecx: number of sectors for kernel data
 ;
-
 [bits 16]
 main:
 	mov si, msg_hello_kernel
@@ -93,7 +96,7 @@ start_protected_mode:
 	mov fs, ax
 	mov gs, ax
 
-	; call draw_vbe
+	call clear_screen
 	call print_string_vbe
 
 	hlt

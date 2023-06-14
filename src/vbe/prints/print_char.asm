@@ -35,13 +35,13 @@ print_char_vbe:
     jnc .background
 
 .foreground:
-    mov byte [edi], 0xf
+    mov byte [edi], 0x7
     inc edi
 
     jmp .continue
 
 .background:
-    mov byte [edi], 0x0
+    mov byte [edi], 0x1
     inc edi
 
     jmp .continue
