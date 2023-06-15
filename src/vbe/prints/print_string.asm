@@ -10,7 +10,6 @@ print_string_vbe:
 
     mov esi, test_string
     mov edi, [mode_info_block.phy_base_ptr]
-    ; add edi, 0x2680
 
 .loop:
     xor eax, eax
@@ -19,14 +18,14 @@ print_string_vbe:
     jz .loop_end
     
     cmp al, 0x0a
-    je .LF
+    je .new_line
 
     cmp al, 0x0d
-    je .CR
+    je .new_line
     
     jmp .print
 
-.LF:
+.new_line:
     xor eax, eax
     mov ax, [mode_info_block.lin_bytes_per_scan_line]
 
@@ -35,35 +34,13 @@ print_string_vbe:
 
     mul ebx
 
-    add edi, eax
-
+    add edi, eax    
+    
     xor edx, edx
     xor eax, eax
 
     mov eax, edi
-    xor ebx, ebx
-    mov bx, [mode_info_block.lin_bytes_per_scan_line]
-    div ebx
-
-    sub edi, edx
-
-    jmp .loop
-
-.CR:
-    xor eax, eax
-    mov ax, [mode_info_block.lin_bytes_per_scan_line]
-
-    xor ebx, ebx
-    mov bl, [mode_info_block.y_char_size]
-
-    mul ebx
-
-    add edi, eax
-
-    xor edx, edx
-    xor eax, eax
-
-    mov eax, edi
+    sub eax, [mode_info_block.phy_base_ptr]
     xor ebx, ebx
     mov bx, [mode_info_block.lin_bytes_per_scan_line]
     div ebx
@@ -75,6 +52,7 @@ print_string_vbe:
 .print:
     call print_char_vbe
 
+.adjust_draw_pos:
     mov ebx, edi
     sub ebx, [mode_info_block.phy_base_ptr]
 
@@ -100,7 +78,7 @@ print_string_vbe:
 
     ret
 
-test_string: db '==========', 0x0a, 'Who', 0x27,'s', 0x0d, 'there?', 0x0a, '==========', 0
+test_string: db '=====================', 0x0a, '  Welcome to EMU OS', 0x0a, '=====================', 0
 
 alphabet: db ' '
           db '!'
