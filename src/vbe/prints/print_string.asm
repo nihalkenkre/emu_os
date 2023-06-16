@@ -21,6 +21,31 @@ print_string_vbe:
     mov [top_padding_st], eax                  ; store the top padding
     mov [left_padding_st], ebx                 ; store the left padding
 
+    ; calculate the padding in bytes for the top padding
+    ; bytes_per_scan_line * y_char_size * top_padding_st
+    xor eax, eax
+    mov ax, [mode_info_block.lin_bytes_per_scan_line]
+    xor ebx, ebx
+    mov bl, [mode_info_block.y_char_size]
+    mul ebx                                 ; eax = bytes_per_scan_line * y_char_size
+
+    mul dword [top_padding_st]                    ; eax * top_padding_st
+
+    mov [top_padding_offset], eax
+
+    ; calculate the padding in bytes for the left padding
+    ; x_char_size * left_padding_st
+
+    xor eax, eax
+    mov al, [mode_info_block.x_char_size]
+    
+    mul dword [left_padding_st]                 ; eax = x_char_size * left_padding_st
+
+    mov [left_padding_offset], eax
+
+    add edi, [top_padding_offset]
+    add edi, [left_padding_offset]
+
 .loop:
     xor eax, eax
     lodsb
@@ -68,6 +93,7 @@ print_string_vbe:
     div ebx                                                     ; quotient is in eax, modulo is in edx
 
     sub edi, edx                                                ; pointer at the start of the new line
+    add edi, [left_padding_offset]                              ; add the left padding offset
 
     jmp .loop
 
@@ -103,8 +129,10 @@ print_string_vbe:
 
 test_string: db '=====================', 0x0a, '  Welcome to EMU OS  ', 0x0a, '=====================', 0
 
-left_padding_st: dd 0                         ; Number of chars from left
-top_padding_st:  dd 0                         ; Number of chars from top
+top_padding_st:       dd 0                 ; Number of chars from top
+left_padding_st:      dd 0                 ; Number of chars from left
+top_padding_offset:   dd 0                 ; Total offset in bytes from top padding
+left_padding_offset:  dd 0                 ; Total offset in bytes from left padding
 
 alphabet: db ' '
           db '!'
