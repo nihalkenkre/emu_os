@@ -9,8 +9,6 @@
 ; Params:
 ;   esi: Pointer to the string
 ;   edi: Pointer to the video memory
-;   eax: num chars offset from top
-;   ebx: num chars offset from left
 ;
 
 [bits 32]
@@ -18,9 +16,6 @@ print_string_vbe:
     push ebp
     mov ebp, esp
     
-    mov [top_padding_st], eax                  ; store the top padding
-    mov [left_padding_st], ebx                 ; store the left padding
-
     ; calculate the padding in bytes for the top padding
     ; bytes_per_scan_line * y_char_size * top_padding_st
     xor eax, eax
@@ -29,7 +24,7 @@ print_string_vbe:
     mov bl, [mode_info_block.y_char_size]
     mul ebx                                 ; eax = bytes_per_scan_line * y_char_size
 
-    mul dword [top_padding_st]                    ; eax * top_padding_st
+    mul dword [top_padding]                    ; eax * top_padding_st
 
     mov [top_padding_offset], eax
 
@@ -39,7 +34,7 @@ print_string_vbe:
     xor eax, eax
     mov al, [mode_info_block.x_char_size]
     
-    mul dword [left_padding_st]                 ; eax = x_char_size * left_padding_st
+    mul dword [left_padding]                 ; eax = x_char_size * left_padding_st
 
     mov [left_padding_offset], eax
 
@@ -149,8 +144,8 @@ print_string_vbe:
 
 test_string: db '=====================', 0x0a, '  Welcome to EMU OS  ', 0x0a, '=====================', 0
 
-top_padding_st:       dd 0                 ; Number of chars from top
-left_padding_st:      dd 0                 ; Number of chars from left
+top_padding:       dd 0                 ; Number of chars from top
+left_padding:      dd 0                 ; Number of chars from left
 top_padding_offset:   dd 0                 ; Total offset in bytes from top padding
 left_padding_offset:  dd 0                 ; Total offset in bytes from left padding
 
