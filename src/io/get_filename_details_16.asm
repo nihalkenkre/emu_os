@@ -23,7 +23,7 @@ get_filename_details:
     push bp
     mov bp, sp
 
-    push edx
+    push dx
     push si
 
     ;; Look for the table entry with filename
@@ -39,7 +39,7 @@ get_filename_details:
     mov ecx, eax        ; number of table entries to ecx
 
 .table_loop:
-    push ecx
+    push cx
     
 .filename_loop:
     xor ecx, ecx
@@ -55,23 +55,23 @@ get_filename_details:
     sub bx, cx          ; Get the number chars that were matched
     sub si, bx          ; decrement si to go back to the start of the test string
 
-    pop ecx
-    dec ecx
+    pop cx
+    dec cx
     jnz .table_loop
 
     jmp .file_not_found
 
 .file_found:
-    pop ecx                 ; we pushed the value before the filename loop
+    pop cx                 ; we pushed the value before the filename loop
 
     xor eax, eax
     mov al, 0x1             ; return file found
 
-    mov ebx, dword [es:di]    ; return file offset
+    mov bx, word [es:di]    ; return file offset
 
     add di, 4
 
-    mov ecx, dword [es:di]    ; return 
+    mov cx, word [es:di]    ; return 
 
     jmp .return
 
@@ -82,7 +82,7 @@ get_filename_details:
 
 .return:
     pop si
-    pop edx
+    pop dx
 
     mov sp, bp
     pop bp

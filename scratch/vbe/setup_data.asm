@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef SETUP_DATA
 %define SETUP_DATA
 
@@ -11,4 +12,5 @@ msg_vbe_func_call_failed: db 'VBE function call failed...', 0
 msg_vbe_mode_not_found: db 'VBE mode not found...', 0
 msg_vbe_mode_not_available: db 'VBE mode not available...', 0
 
+%endif
 %endif

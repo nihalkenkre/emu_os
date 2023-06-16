@@ -9,7 +9,7 @@ start:
 
 %include "./src/io/load_sectors_16.asm"
 %include "./src/io/get_filename_details_16.asm"
-%include "./src/prints/print_string.asm"
+%include "./src/prints/print_string_boot.asm"
 
 main:
     mov ax, 0
@@ -88,13 +88,13 @@ main:
 .load_sectors:
     call load_sectors
 
-    jmp 0:0x8000
+    jmp 0:0x8000          ; far jump to kernel. far jump resets the segment registers
 
     jmp .halt
 
 .file_not_found:
     mov si, kernel_not_found
-    call print_string
+    call print_string_boot
 
     jmp .halt
 
@@ -107,7 +107,7 @@ emufs_table_size equ 512
 sector_size equ 512
 
 kernel_filename: db 'kernel.bin'
-kernel_not_found: db 'kernel not found...'
+kernel_not_found: db 'kernel not found...', 0x0a, 0x0d, 0
 
 
 times 510 - ($ - $$) db 0
