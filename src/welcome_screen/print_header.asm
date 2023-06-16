@@ -8,11 +8,11 @@ print_header:
     push ebp
     mov ebp, esp
 
-    mov esi, header
     mov edi, [mode_info_block.phy_base_ptr]
+
+    mov esi, header
     mov eax, [top_padding_ld]
     mov ebx, [left_padding_ld]
-
     call print_string_vbe
 
     mov esp, ebp
