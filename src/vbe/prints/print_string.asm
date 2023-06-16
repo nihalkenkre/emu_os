@@ -3,13 +3,23 @@
 
 %include "./src/vbe/prints/print_char.asm"
 
+;
+; Prints a string to the screen
+;
+; Params:
+;   esi: Pointer to the string
+;   edi: Pointer to the video memory
+;   eax: num chars offset from top
+;   ebx: num chars offset from left
+;
+
 [bits 32]
 print_string_vbe:
     push ebp
     mov ebp, esp
-
-    mov esi, test_string
-    mov edi, [mode_info_block.phy_base_ptr]
+    
+    mov [top_padding_st], eax                  ; store the top padding
+    mov [left_padding_st], ebx                 ; store the left padding
 
 .loop:
     xor eax, eax
@@ -26,6 +36,11 @@ print_string_vbe:
     jmp .print
 
 .new_line:
+    ; To write to a new line, we first 
+    ;   bytes_per_scan_line * y_char_size, and add this to the current memory location (edi)
+    ;
+    ; This gives us the memory location of the 'next line', but this is right below the previously written char
+
     xor eax, eax
     mov ax, [mode_info_block.lin_bytes_per_scan_line]
 
@@ -34,51 +49,62 @@ print_string_vbe:
 
     mul ebx
 
-    add edi, eax    
-    
+    add edi, eax                                                ; pointer now at new line, but not at the start
+
+    ; To go to the 'start' of the line, we first
+    ; subtract the current memory location from the base memory_location
+    ; edi - phy_base_ptr
+    ;
+    ; and do a bytes_per_scan_line / x_resolution. The remainder is the number of locations from the 'start' of the line
+    ;    
     xor edx, edx
     xor eax, eax
 
     mov eax, edi
     sub eax, [mode_info_block.phy_base_ptr]
+
     xor ebx, ebx
     mov bx, [mode_info_block.lin_bytes_per_scan_line]
-    div ebx
+    div ebx                                                     ; quotient is in eax, modulo is in edx
 
-    sub edi, edx
+    sub edi, edx                                                ; pointer at the start of the new line
 
     jmp .loop
 
 .print:
     call print_char_vbe
 
-.adjust_draw_pos:
-    mov ebx, edi
-    sub ebx, [mode_info_block.phy_base_ptr]
+.wrap_text_to_next_line:
+    ; First check if edi is at the last byte of the scan line
+
+    ; we subtract edi from the base ptr
+    ; edi - phy_base_ptr
 
     xor edx, edx
-    mov dx, [mode_info_block.x_resolution]
+    mov eax, edi
+    sub eax, [mode_info_block.phy_base_ptr]
 
-    cmp bx, dx
+    ; then divide by the bytes per scan line
+    ; and if the remainder is 0, means we are at the end of the scan line
+    xor ebx, ebx
+    mov bx, [mode_info_block.lin_bytes_per_scan_line]
+    div ebx                                             ; quotient is in eax, remainder in edx
+
+    cmp edx, 0
     jne .loop
 
-    xor eax, eax
-    mov ax, [mode_info_block.lin_bytes_per_scan_line]
-    xor ebx, ebx
-    mov bl, [mode_info_block.y_char_size]
-    mul bx
+    jmp .new_line                                       ; new line if edx is 0
 
-    add edi, eax
-
-    jmp .loop
-
-.loop_end
+.loop_end:
     mov esp, ebp
     pop ebp
 
     ret
 
-test_string: db '=====================', 0x0a, '  Welcome to EMU OS', 0x0a, '=====================', 0
+test_string: db '=====================', 0x0a, '  Welcome to EMU OS  ', 0x0a, '=====================', 0
+
+left_padding_st: dd 0                         ; Number of chars from left
+top_padding_st:  dd 0                         ; Number of chars from top
 
 alphabet: db ' '
           db '!'

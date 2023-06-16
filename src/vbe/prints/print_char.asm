@@ -20,17 +20,19 @@ print_char_vbe:
 
     shl eax, 4
 
-    mov esi, fonts
-    add esi, eax
+    mov esi, fonts                              ; pointer to font glyphs
+    add esi, eax                                ; offset to the ascii value in the fonts 'array' to 
+                                                ; get the required glyph for the char.
 
-    xor edx, edx
+    xor edx, edx                                ; edx is used in some operations, and may contain 
+                                                ; undesired values
 
-.loop_y:
+.loop_y:                                        ; loop for the height of the glyph
     xor ecx, ecx
     mov cl, [mode_info_block.x_char_size]
 
-.loop_x:
-    bt word [esi], cx
+.loop_x:                                        ; loop for the width of the glyph
+    bt word [esi], cx                           ; check if bit is set in the byte
     jc .foreground
     jnc .background
 
@@ -50,25 +52,42 @@ print_char_vbe:
     dec cl
     jnz .loop_x
     
+    ; now edi is pointing to the right of the char printed
+    ; We have to bring to the left of the next line
+
+    ; So first
+    ; edi + bytes_per_scan_line, will bring edi to the right of next line of the char
     add edi, [mode_info_block.lin_bytes_per_scan_line]
+
+    ; and then 
+    ; edi - x_char_size, will bring edi to the left of next line of the char
     xor ebx, ebx
     mov bl, [mode_info_block.x_char_size]
-    sub edi, ebx
+    sub edi, ebx                                    
 
-    inc esi
+    inc esi                                     ; point to the next line(byte) in the char glyph
 
     inc dl
     cmp dl, [mode_info_block.y_char_size]
     jnz .loop_y
 
+    ; edi is now pointing to the bottom left of the char
+    ;
+    ; To print the next char it has to be taken to the top right of the current char
+
+    ; So we first get the number of bytes to go to the top of the char
+    ; bytes_per_scan_line * y_char_size
     xor ebx, ebx
     xor eax, eax
     mov ebx, [mode_info_block.lin_bytes_per_scan_line]
     mov al, [mode_info_block.y_char_size]
-    mul ebx
+    mul ebx                                             ; result is stored in eax
 
-    sub edi, eax
+    ; and subtract it from edi
+    ; edi - (bytes_per_scan_line * y_char_size)
+    sub edi, eax                                        ; edi is on top left of the char
 
+    ; To go to the top right of the char we add the x_char_size to edi
     xor ebx, ebx
     mov bl, [mode_info_block.x_char_size]
     add edi, ebx
@@ -80,6 +99,5 @@ print_char_vbe:
     pop ebp
 
     ret
-
 
 %endif

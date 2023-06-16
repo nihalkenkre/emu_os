@@ -10,10 +10,6 @@ start:
 ; 16 bit includes
 %include "./src/vbe/setup.asm"
 
-; 32 bit includes
-%include "./src/io/load_apps_from_table_32.asm"
-%include "./src/vbe/draw/clear_screen.asm"
-%include "./src/vbe/prints/print_string.asm"
 
 ;
 ; ebx: start sector of kernel data
@@ -96,10 +92,14 @@ start_protected_mode:
 	mov fs, ax
 	mov gs, ax
 
-	call clear_screen
-	call print_string_vbe
+	call show_welcome_screen
+	; call clear_screen
+	; call print_string_vbe
 
 	hlt
+
+; 32 bit includes
+%include "./src/welcome_screen/show_welcome_screen.asm"
 
 gdt_start:
 	.null: 
