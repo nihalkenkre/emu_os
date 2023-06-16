@@ -13,6 +13,7 @@ show_welcome_screen:
     call clear_screen
     call print_header
     call print_file_menu
+    call update_selection
 
     mov esp, ebp
     pop ebp

@@ -19,6 +19,6 @@ print_new_line_vbe:
 
     ret
 
-new_line: db 0x0a
+new_line: db 0x0a, 0
 
 %endif

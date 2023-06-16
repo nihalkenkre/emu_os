@@ -4,6 +4,12 @@
 %include "./src/vbe/prints/print_string.asm"
 %include "./src/vbe/prints/print_new_line.asm"
 
+; 
+; Print the names of the file present in the disk
+;
+; Params:
+;   edi: Pointer to the video memory
+;
 [bits 32]
 print_file_menu:
     push ebp
@@ -12,9 +18,10 @@ print_file_menu:
     ; Go through the emufs file table and print out the names of the files
     ; File Table: 10 bytes filename + 4 bytes file offset from start + 4 bytes file size
 
-    mov esi, 0x7e00
+    mov esi, 0x7e00                     ; emufs table location
     add esi, 18                         ; skip the first entry which is the kernel entry
 
+    ; call print_new_line_vbe
 .table_loop:
     ; first check to see if the size of in the file entry table is 0
     ; if it is zero, there is no file present there and after
@@ -24,24 +31,20 @@ print_file_menu:
 
     je .table_loop_end
 
-    push esi                        ; store the esi which can be used later to jump to next entry
+    push esi                            ; store the esi which can be used later to jump to next entry
 
     inc byte [num_files]
 
-    mov dword [top_padding], 1
+    mov dword [top_padding], 0
     mov dword [left_padding], 28
-    call print_string_vbe
+    call print_string_vbe               ; print the file name. TODO: limit the file name printing to 10 bytes max.
+    call print_new_line_vbe
 
     pop esi
     
-    ; mov dword [top_padding], 0
-    ; mov dword [left_padding], 0
-    ; call print_new_line_vbe
-
-    add esi, emufs_table_entry_size
+    add esi, emufs_table_entry_size     ; jump to the next table entry
 
     jmp .table_loop
-
 
 .table_loop_end:
 
