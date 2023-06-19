@@ -33,9 +33,9 @@ print_string_vbe:
     mov ax, [mode_info_block.lin_bytes_per_scan_line]
     xor ebx, ebx
     mov bl, [mode_info_block.y_char_size]
-    mul ebx                                 ; eax = bytes_per_scan_line * y_char_size
+    mul ebx                                             ; eax = bytes_per_scan_line * y_char_size
 
-    mul dword [top_padding]                    ; eax * top_padding_st
+    mul dword [top_padding]                             ; eax * top_padding_st
 
     mov [top_padding_offset], eax
 
@@ -45,7 +45,7 @@ print_string_vbe:
     xor eax, eax
     mov al, [mode_info_block.x_char_size]
     
-    mul dword [left_padding]                 ; eax = x_char_size * left_padding_st
+    mul dword [left_padding]                            ; eax = x_char_size * left_padding_st
 
     mov [left_padding_offset], eax
 
@@ -99,9 +99,24 @@ print_string_vbe:
     div ebx                                                     ; quotient is in eax, modulo is in edx
 
     sub edi, edx                                                ; pointer at the start of the new line
+
+    ; If the new line is the last byte of the string, 
+    ;    do not add the left offset to edi
+    ; Check if current byte is 0
+    xor edx, edx
+    mov dl, [esi]
+
+    or dl, dl
+    jz .loop_end                                                ; end of string
+
+    ; new line is not the last byte of the string, 
+    ;   add the left offset to edi
+
     add edi, [left_padding_offset]                              ; add the left padding offset
 
-    mov byte [current_char_count], 0                            ; reset the line char count
+    ; set the current char count to the left padding
+    mov ebx, [left_padding]
+    mov byte [current_char_count], bl               
 
     jmp .loop
 
@@ -111,7 +126,6 @@ print_string_vbe:
 
 .wrap_text_to_next_line:
     ; Check if edi is at the max num of chars allowed in 1 line
-
     xor eax, eax
     mov al, [max_chars_per_line]
     cmp al, [current_char_count]
@@ -119,6 +133,8 @@ print_string_vbe:
     je .new_line
     jmp .loop
 
+.loop_end_after_new_line:
+    mov byte [current_char_count], 0                            ; reset the line char count
 
 .loop_end:
 
@@ -131,8 +147,8 @@ test_string: db '=====================', 0x0a, '  Welcome to EMU OS  ', 0x0a, '=
 
 top_padding:       dd 0                 ; Number of chars from top
 left_padding:      dd 0                 ; Number of chars from left
-top_padding_offset:   dd 0                 ; Total offset in bytes from top padding
-left_padding_offset:  dd 0                 ; Total offset in bytes from left padding
+top_padding_offset:   dd 0              ; Total offset in bytes from top padding
+left_padding_offset:  dd 0              ; Total offset in bytes from left padding
 
 max_chars_per_line: db 0
 current_char_count: db 0

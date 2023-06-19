@@ -36,8 +36,8 @@ print_file_menu:
     inc byte [num_files]
 
     mov dword [top_padding], 0
-    mov dword [left_padding], 28
-    call print_string_vbe               ; print the file name. TODO: limit the file name printing to 10 bytes max.
+    mov dword [left_padding], 29
+    call print_string_vbe               ; print the file name until null char. TODO: limit the file name printing to 10 bytes max.
     call print_new_line_vbe
 
     pop esi
