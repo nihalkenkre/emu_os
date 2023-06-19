@@ -21,9 +21,8 @@ print_file_menu:
     mov esi, 0x7e00                     ; emufs table location
     add esi, 18                         ; skip the first entry which is the kernel entry
 
-    ; call print_new_line_vbe
 .table_loop:
-    ; first check to see if the size of in the file entry table is 0
+    ; Check to see if the size of in the file entry table is 0
     ; if it is zero, there is no file present there and after
     mov ebx, esi
     add ebx, emufs_table_entry_size_value_offset
@@ -33,7 +32,22 @@ print_file_menu:
 
     push esi                            ; store the esi which can be used later to jump to next entry
 
-    inc byte [num_files]
+    ; Store the edi values before printing the file names
+    ;   These can be used for highlighting the current selection
+    xor eax, eax
+    mov al, [num_files]
+    
+    xor ebx, ebx
+    mov ebx, 4
+
+    mul ebx                             ; multitply the num file by 4 since edi for each file is 4 bytes
+
+    xor ebx, ebx                        
+    mov ebx, edi_for_file_labels        ; This is the base address, eax contains the 'offset'
+
+    mov [ebx + eax], edi                ; store edi at base + offset
+
+    inc byte [num_files]                ; increment num files variable
 
     mov dword [top_padding], 0
     mov dword [left_padding], 29
@@ -54,7 +68,8 @@ print_file_menu:
     ret
 
 num_files: db 0
-edi_for_file_labels: times 10 dd 0                 ; Allocating space for 10 edi(s) for now
+edi_for_file_labels: times 10 dd 0                 ; Allocating space for 10 edi(s) for now. TODO: Make storage dynamic
+
 max_filename_len equ 10
 emufs_table_entry_size equ 18
 emufs_table_entry_size_value_offset equ 14
