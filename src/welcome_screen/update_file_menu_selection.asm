@@ -7,7 +7,7 @@ update_file_menu_selection:
     mov ebp, esp
 
     xor edx, edx
-    mov byte edx, [current_selection]
+    mov dl, [current_selection]
     mov edi, [edi_for_file_labels]
     call print_file_menu
 
@@ -18,7 +18,6 @@ update_file_menu_selection:
     ret
 
 
-current_selection: db 1                            ; Starting from 0 to num_files - 1
-
+current_selection: db 0                            ; Starting from 0 to num_files - 1
 
 %endif

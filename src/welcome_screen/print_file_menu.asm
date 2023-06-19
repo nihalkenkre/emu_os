@@ -8,7 +8,7 @@
 ; Print the names of the file present in the disk
 ;
 ; Params:
-;   edx: current selection index
+;   dl: current selection index
 ;   edi: Pointer to the video memory
 ;
 [bits 32]
@@ -22,6 +22,9 @@ print_file_menu:
     mov esi, 0x7e00                     ; emufs table location
     add esi, 18                         ; skip the first entry which is the kernel entry
 
+    mov byte [num_files], 0
+    mov byte [current_selection_index], dl 
+
 .table_loop:
     ; Check to see if the size of in the file entry table is 0
     ; if it is zero, there is no file present there and after
@@ -33,6 +36,20 @@ print_file_menu:
 
     push esi                            ; store the esi which can be used later to jump to next entry
 
+    xor edx, edx
+    mov dl, [current_selection_index]
+    cmp dl, [num_files]                 ; check if current file index is selected
+    jne .not_selected
+    
+.selected:
+    mov byte [is_selected], 1
+    jmp .continue
+
+.not_selected:
+    mov byte [is_selected], 0
+    jmp .continue
+
+.continue:
     ; Store the edi values before printing the file names
     ;   These can be used for highlighting the current selection
     xor eax, eax
@@ -48,18 +65,6 @@ print_file_menu:
 
     mov [ebx + eax], edi                ; store edi at base + offset
 
-    cmp dl, [num_files]                 ; check if current file index is selected
-    jne .not_selected
-    
-.selected:
-    mov byte [is_selected], 1
-    jmp .continue
-
-.not_selected:
-    mov byte [is_selected], 0
-    jmp .continue
-
-.continue:
     inc byte [num_files]                ; increment num files variable
 
     mov dword [top_padding], 0
@@ -82,6 +87,7 @@ print_file_menu:
 
 num_files: db 0
 edi_for_file_labels: times 10 dd 0                 ; Allocating space for 10 edi(s) for now. TODO: Make storage dynamic
+current_selection_index: db 0
 
 max_filename_len equ 10
 emufs_table_entry_size equ 18
