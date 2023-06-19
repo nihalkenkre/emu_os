@@ -42,9 +42,17 @@ print_char_vbe:
     jmp .continue
 
 .background:
+    cmp byte [is_selected], 0
+    je .not_selected
+
+.selected:
+    mov byte [edi], 0x4
+    inc edi
+    jmp .continue
+
+.not_selected:
     mov byte [edi], 0x1
     inc edi
-
     jmp .continue
 
 .continue:
@@ -99,5 +107,7 @@ print_char_vbe:
     pop ebp
 
     ret
+
+is_selected: db 0
 
 %endif

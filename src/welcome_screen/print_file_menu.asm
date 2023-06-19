@@ -8,6 +8,7 @@
 ; Print the names of the file present in the disk
 ;
 ; Params:
+;   edx: current selection index
 ;   edi: Pointer to the video memory
 ;
 [bits 32]
@@ -47,6 +48,18 @@ print_file_menu:
 
     mov [ebx + eax], edi                ; store edi at base + offset
 
+    cmp dl, [num_files]                 ; check if current file index is selected
+    jne .not_selected
+    
+.selected:
+    mov byte [is_selected], 1
+    jmp .continue
+
+.not_selected:
+    mov byte [is_selected], 0
+    jmp .continue
+
+.continue:
     inc byte [num_files]                ; increment num files variable
 
     mov dword [top_padding], 0
