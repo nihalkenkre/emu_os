@@ -93,8 +93,6 @@ start_protected_mode:
 	mov gs, ax
 
 	call show_welcome_screen
-	; call clear_screen
-	; call print_string_vbe
 
 	hlt
 

@@ -70,10 +70,10 @@ print_char_vbe:
     cmp dl, [mode_info_block.y_char_size]
     jnz .loop_y                                 ; one char has been printed
 
-    ; edi is now pointing to the bottom left of the char
+    ; edi is now pointing to the bottom right of the char
     ;
     ; To print the next char it has to be taken to the top right of the current char,
-    ; which is the top left of the next char, 1 pixel to the left
+    ; which is the top left of the next char
 
     ; So we first get the number of bytes to go to the top of the char
     ; bytes_per_scan_line * y_char_size
@@ -90,7 +90,6 @@ print_char_vbe:
     ; To go to the top right of the char we add the x_char_size to edi
     xor ebx, ebx
     mov bl, [mode_info_block.x_char_size]
-    inc byte bl
     add edi, ebx
 
 .return:

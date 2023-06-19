@@ -22,7 +22,4 @@ print_header:
 
 header:       db '===================', 0x0a, ' Welcome to Emu OS ', 0x0d, '===================', 0x0a, 0
 
-; top_padding_ld:  dd 1                          ; Number of chars from top
-; left_padding_ld: dd 28                        ; Number of chars from left
-
 %endif

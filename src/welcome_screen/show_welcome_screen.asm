@@ -4,6 +4,7 @@
 %include "./src/vbe/draw/clear_screen.asm"
 %include "./src/welcome_screen/print_header.asm"
 %include "./src/welcome_screen/print_file_menu.asm"
+%include "./src/welcome_screen/update_file_menu_selection.asm"
 
 [bits 32]
 show_welcome_screen:
@@ -13,7 +14,7 @@ show_welcome_screen:
     call clear_screen
     call print_header
     call print_file_menu
-    call update_selection
+    call update_file_menu_selection
 
     mov esp, ebp
     pop ebp

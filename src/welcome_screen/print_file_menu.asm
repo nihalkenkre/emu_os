@@ -54,6 +54,7 @@ print_file_menu:
     ret
 
 num_files: db 0
+edi_for_file_labels: times 10 dd 0                 ; Allocating space for 10 edi(s) for now
 max_filename_len equ 10
 emufs_table_entry_size equ 18
 emufs_table_entry_size_value_offset equ 14

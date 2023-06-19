@@ -16,6 +16,17 @@ print_string_vbe:
     push ebp
     mov ebp, esp
     
+    ; Calculate the max chars per scan line
+    xor edx, edx                                        ; prepare for division
+    xor eax, eax
+    mov ax, [mode_info_block.lin_bytes_per_scan_line]
+    xor ebx, ebx
+    mov bl, [mode_info_block.x_char_size]
+    
+    div ebx                                             ; quotient in eax, remainder in edx
+
+    mov [max_chars_per_line], al
+
     ; calculate the padding in bytes for the top padding
     ; bytes_per_scan_line * y_char_size * top_padding_st
     xor eax, eax
@@ -90,52 +101,26 @@ print_string_vbe:
     sub edi, edx                                                ; pointer at the start of the new line
     add edi, [left_padding_offset]                              ; add the left padding offset
 
+    mov byte [current_char_count], 0                            ; reset the line char count
+
     jmp .loop
 
 .print:
     call print_char_vbe
+    inc byte [current_char_count]
 
 .wrap_text_to_next_line:
-    ; First check if edi is at the last byte of the scan line
+    ; Check if edi is at the max num of chars allowed in 1 line
 
-    ; we subtract edi from the base ptr
-    ; edi - phy_base_ptr
+    xor eax, eax
+    mov al, [max_chars_per_line]
+    cmp al, [current_char_count]
 
-    xor edx, edx
-    mov eax, edi
-    sub eax, [mode_info_block.phy_base_ptr]
+    je .new_line
+    jmp .loop
 
-    ; then divide by the bytes per scan line
-    ; and if the remainder is 0, means we are at the end of the scan line
-    xor ebx, ebx
-    mov bx, [mode_info_block.lin_bytes_per_scan_line]
-    div ebx                                             ; quotient is in eax, remainder in edx
-
-    cmp edx, 0
-    jne .loop
-
-    jmp .new_line                                       ; new line if edx is 0
 
 .loop_end:
-    ; bring edi to the start of the current line
-    ;
-    ; To go to the 'start' of the line, we first
-    ; subtract the current memory location from the base memory_location
-    ; edi - phy_base_ptr
-    ;
-    ; and do a bytes_per_scan_line / x_resolution. The remainder is the number of locations from the 'start' of the line
-    ; 
-    xor edx, edx
-    xor eax, eax
-
-    mov eax, edi
-    sub eax, [mode_info_block.phy_base_ptr]
-
-    xor ebx, ebx
-    mov bx, [mode_info_block.lin_bytes_per_scan_line]
-    div ebx                                                     ; quotient is in eax, modulo is in edx
-
-    sub edi, edx                                                ; pointer at the start of the new line
 
     mov esp, ebp
     pop ebp
@@ -149,13 +134,10 @@ left_padding:      dd 0                 ; Number of chars from left
 top_padding_offset:   dd 0                 ; Total offset in bytes from top padding
 left_padding_offset:  dd 0                 ; Total offset in bytes from left padding
 
-alphabet: db ' '
-          db '!'
-          db '"'
-          db '#'
-          db '$'
-          db '%'
-          db '&'
+max_chars_per_line: db 0
+current_char_count: db 0
+
+alphabet: db ' !"#$%&'
           db 0x27 ; '
           db '('
           db ')'
