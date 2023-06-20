@@ -8,7 +8,6 @@
 ;
 ; Params:
 ;   eax - ascii code of the character
-;   esi - pointer to the string
 ;   edi - pointer to the linear buffer
 ;
 [bits 32]
@@ -43,9 +42,17 @@ print_char_vbe:
     jmp .continue
 
 .background:
+    cmp byte [is_selected], 0
+    je .not_selected
+
+.selected:
+    mov byte [edi], 0x4
+    inc edi
+    jmp .continue
+
+.not_selected:
     mov byte [edi], 0x1
     inc edi
-
     jmp .continue
 
 .continue:
@@ -69,11 +76,12 @@ print_char_vbe:
 
     inc dl
     cmp dl, [mode_info_block.y_char_size]
-    jnz .loop_y
+    jnz .loop_y                                 ; one char has been printed
 
-    ; edi is now pointing to the bottom left of the char
+    ; edi is now pointing to the bottom right of the char
     ;
-    ; To print the next char it has to be taken to the top right of the current char
+    ; To print the next char it has to be taken to the top right of the current char,
+    ; which is the top left of the next char
 
     ; So we first get the number of bytes to go to the top of the char
     ; bytes_per_scan_line * y_char_size
@@ -99,5 +107,7 @@ print_char_vbe:
     pop ebp
 
     ret
+
+is_selected: db 0
 
 %endif
