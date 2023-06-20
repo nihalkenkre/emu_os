@@ -77,7 +77,11 @@ print_file_menu:
     xor bx, bx
     mov byte bl, [char_color]
     call print_string               ; print the file name until null char. TODO: limit the file name printing to 10 bytes max.
-    call print_new_line
+
+    ; Shift cursor to next line
+    inc dh
+    xor dl, dl
+    call set_cursor_position
 
     pop si
     

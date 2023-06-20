@@ -53,13 +53,12 @@ print_string:
 	mov cl, [si]
 	
 	or cl, cl
+	pop cx
 	jz .done
 
 	add dl, [left_padding]
 	call set_cursor_position
 
-	pop cx
-	
 	jmp .null_ter_loop
 	
 .done:
