@@ -16,7 +16,6 @@ print_string:
 
 	push si
 	push ax
-	push ax
 	push bx
 
 	mov ah, 0x9
@@ -66,12 +65,13 @@ print_string:
 .done:
 	pop bx
 	pop ax
-	pop ax
 	pop si
 
 	mov sp, bp
 	pop bp
 
 	ret
+
+is_selected: db 0
 
 %endif

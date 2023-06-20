@@ -9,6 +9,7 @@ print_header:
     mov bp, sp
 
     mov si, header
+    mov bl, 0x1f
     call print_string
 
     mov sp, bp

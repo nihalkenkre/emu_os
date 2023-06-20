@@ -107,7 +107,7 @@ emufs_table_size equ 512
 sector_size equ 512
 
 kernel_filename: db 'kernel.bin'
-kernel_not_found: db 'kernel not found...'
+kernel_not_found: db 'kernel not found...', 0x0a, 0x0d, 0
 
 
 times 510 - ($ - $$) db 0

@@ -7,7 +7,6 @@ bits 16
 start:
 	jmp main
 
-%include "./src/draw/draw_16.asm"
 %include "./src/welcome_screen/welcome_screen.asm"
 ;
 ; ebx: start sector of kernel data
@@ -27,8 +26,7 @@ main:
 	; call clear_screen
 
 	; xor dx, dx
-	; mov dl, 0
-	; mov dh, 10
+	; mov dx, 0x041d
 	; mov ah, 0x2
 	; int 0x10
 
@@ -37,7 +35,6 @@ main:
 	; mov bl, 0x1f
 	; mov cx, 1
 	; int 0x10
-
 
 	hlt	
 

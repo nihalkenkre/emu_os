@@ -6,6 +6,8 @@ clear_screen:
     push bp
     mov bp, sp
 
+    push es
+
     mov ax, 0xb000
     mov es, ax
     mov di, 0x8000
@@ -14,6 +16,8 @@ clear_screen:
     mov ax, 0x1000
 
     rep stosw
+
+    pop es
 
     mov sp, bp
     pop bp
