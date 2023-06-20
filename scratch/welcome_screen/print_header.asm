@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef PRINT_HEADER
 %define PRINT_HEADER
 
@@ -22,4 +23,5 @@ print_header:
 
 header:       db '===================', 0x0a, ' Welcome to Emu OS ', 0x0d, '===================', 0x0a, 0
 
+%endif
 %endif

@@ -88,7 +88,7 @@ main:
 .load_sectors:
     call load_sectors
 
-    jmp 0:0x8000
+    jmp 0:0x8000          ; far jump to kernel. far jump resets the segment registers
 
     jmp .halt
 

@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef PRINT_FILE_MENU
 %define PRINT_FILE_MENU
 
@@ -93,4 +94,5 @@ max_filename_len equ 10
 emufs_table_entry_size equ 18
 emufs_table_entry_size_value_offset equ 14
 
+%endif
 %endif

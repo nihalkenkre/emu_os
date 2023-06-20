@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef VBE_SETUP
 %define VBE_SETUP
 
@@ -150,4 +151,5 @@ setup_vbe:
 %include "./src/vbe/setup_data.asm"
 %include "./src/vbe/info_blocks.asm"
 
+%endif
 %endif

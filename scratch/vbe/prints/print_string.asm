@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef PRINT_STRING_VBE
 %define PRINT_STRING_VBE
 
@@ -243,4 +244,5 @@ alphabet: db ' !"#$%&'
           db '}'
           db '~'
           db 0
+%endif
 %endif

@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef INFO BLOCKS
 %define INFO_BLOCKS
 
@@ -72,4 +73,5 @@ mode_info_block:
 	.max_pixel_clock:			dd 0
 	.reserved_c:				times 189 db 0	
 
+%endif
 %endif
