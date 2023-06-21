@@ -6,6 +6,24 @@ clear_screen_graphics:
     push bp
     mov bp, sp
 
+    push ax
+    push es
+    push di
+
+    mov ax, 0xa000
+    mov es, ax
+    mov di, 0x0000
+
+    add di, 320 * 20
+
+    mov cx, 320 * 160
+    mov ax, 0x6b
+    rep stosb
+
+    pop di
+    pop es
+    pop ax
+
     mov sp, bp
     pop bp
 
@@ -13,8 +31,9 @@ clear_screen_graphics:
 
 ;
 ; Runs the Chip8 program located in memory
+; Params:
 ;   di: program addr
-;
+;   
 [bits 16]
 run_chip8_app:
     push bp
