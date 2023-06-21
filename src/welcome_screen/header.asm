@@ -19,7 +19,7 @@ print_header:
 
 header: db '===================', 0x0a, ' Welcome to Emu OS ', 0x0d, '===================', 0x0a, 0
 
-top_padding: db 1
-left_padding: db 27
+top_padding: dw 1
+left_padding: dw 27
 
 %endif
