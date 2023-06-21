@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef UPDATE_FILE_MENU_SELECTION
 %define UPDATE_FILE_MENU_SELECTION
 
@@ -20,4 +21,5 @@ update_file_menu_selection:
 
 current_selection: db 0                            ; Starting from 0 to num_files - 1
 
+%endif
 %endif

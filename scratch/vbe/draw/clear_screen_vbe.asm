@@ -1,8 +1,9 @@
-%ifndef CLEAR_SCREEN
-%define CLEAR_SCREEN
+%ifdef VBE
+%ifndef CLEAR_SCREEN_VBE
+%define CLEAR_SCREEN_VBE
 
 [bits 32]
-clear_screen:
+clear_screen_vbe:
     push ebp
     mov ebp, esp
 
@@ -17,4 +18,5 @@ clear_screen:
 
     ret
 
+%endif
 %endif

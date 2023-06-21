@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef PRINT_NEW_LINE_VBE
 %define PRINT_NEW_LINE_VBE
 
@@ -21,4 +22,5 @@ print_new_line_vbe:
 
 new_line: db 0x0a, 0
 
+%endif
 %endif

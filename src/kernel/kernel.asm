@@ -7,126 +7,44 @@ bits 16
 start:
 	jmp main
 
-; 16 bit includes
-%include "./src/vbe/setup.asm"
-
-
+%include "./src/welcome_screen/welcome_screen.asm"
 ;
-; ebx: start sector of kernel data
-; ecx: number of sectors for kernel data
+; bx: start sector of kernel data
+; cx: number of sectors for kernel data
 ;
 [bits 16]
 main:
-	mov si, msg_hello_kernel
-	call print_string
-	call print_new_line
+	mov ax, 0x0003
+	int 0x10
 
-	call setup_vbe
-	cmp al, 0
-	jne .vbe_error
+	mov [kernel_data_start_sec], bx
+	mov [kernel_data_sec_count], cx
 
-	jmp switch_to_32_bits
+	jmp print_welcome_screen
 
-.vbe_error:
-	cmp al, 1
-	je .vbe_func_not_supported
+	; mov si, msg_bye_kernel
+	; call print_string
+	; call print_new_line
 
-	cmp al, 2
-	je .vbe_func_call_failed
+	; call clear_screen
 
-	cmp al, 3
-	je .vbe_mode_not_found
+	; xor dx, dx
+	; mov dx, 0x041d
+	; mov ah, 0x2
+	; int 0x10
 
-	cmp al, 4
-	je .vbe_mode_not_available
+	; mov al, 'A'
+	; mov ah, 0x9
+	; mov bl, 0x1f
+	; mov cx, 1
+	; int 0x10
 
-	jmp .return
-
-.vbe_func_not_supported:
-	mov si, msg_vbe_func_not_supported
-	jmp .print_error_string
-
-.vbe_func_call_failed:
-	mov si, msg_vbe_func_call_failed
-	jmp .print_error_string
-
-.vbe_mode_not_found:
-	mov si, msg_vbe_mode_not_found
-	jmp .print_error_string
-
-.vbe_mode_not_available:
-	mov si, msg_vbe_mode_not_available
-	jmp .print_error_string
-
-.print_error_string:
-	call print_string
-	call print_new_line
-
-.return:
-	mov si, msg_bye_kernel
-	call print_string
-	call print_new_line
-
-	cli
-	hlt
-
-[bits 16]
-switch_to_32_bits:
-	cli										; disable interrupts
-
-	lgdt [gdt_desc]							; load global descriptor table
-
-	; set the control register value to enter protected mode - currently 16 bit
-	mov eax, cr0
-	or eax, 0x1
-	mov cr0, eax
-
-	jmp CODESEG:start_protected_mode		; jump to 32 bit code, which will be 32 bit protected mode
-
-[bits 32]
-start_protected_mode:
-	mov ax, DATASEG
-	mov ds, ax
-	mov ss, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-
-	call show_welcome_screen
-
-	hlt
-
-; 32 bit includes
-%include "./src/welcome_screen/show_welcome_screen.asm"
-
-gdt_start:
-	.null: 
-		dd 0
-		dd 0
-	.code:
-		dw 0xffff
-		dw 0
-		db 0
-		db 0x9a
-		db 11001111b
-		db 0
-	.data:
-		dw 0xffff
-		dw 0
-		db 0
-		db 0x92
-		db 11001111b
-		db 0
-gdt_end:
-
-gdt_desc:
-	.size:  	dw (gdt_end - gdt_start - 1)
-	.offset: 	dd gdt_start
-
-CODESEG equ gdt_start.code - gdt_start
-DATASEG equ gdt_start.data - gdt_start
+	hlt	
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
+
+kernel_data_start_sec: dw 0
+kernel_data_sec_count: dw 0
 
 %endif

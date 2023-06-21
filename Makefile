@@ -6,7 +6,9 @@ BUILD_DIR=build
 
 IMG_DIR=assets/imgs
 
-.PHONY: all floppy_image boot kernel test always run clean
+.PHONY: all vbe floppy_image boot kernel test always run clean
+
+all: floppy_image boot kernel test
 
 floppy_image: $(BUILD_DIR)/main_floppy.img
 

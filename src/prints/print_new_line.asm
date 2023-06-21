@@ -1,29 +1,23 @@
 %ifndef PRINT_NEW_LINE
 %define PRINT_NEW_LINE
 
-;
-; Prints a new line to the screen, using int10 commands
-;
-
 [bits 16]
 print_new_line:
-	push bp
-	mov bp, sp
+    push bp
+    mov bp, sp
 
-	push ax
+    push si
 
-	mov ah, 0x0e
-	mov al, 0xd
-	int 0x10
+    mov si, new_line
+    call print_string
 
-	mov al, 0xa
-	int 0x10
+    pop si
 
-	pop ax
+    mov sp, bp
+    pop bp
 
-	mov sp, bp
-	pop bp
+    ret
 
-	ret	
+new_line: db 0x0a, 0
 
 %endif

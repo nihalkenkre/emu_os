@@ -1,3 +1,4 @@
+%ifdef VBE
 %ifndef PRINT_CHAR_VBE
 %define PRINT_CHAR_VBE
 
@@ -110,4 +111,5 @@ print_char_vbe:
 
 is_selected: db 0
 
+%endif
 %endif
