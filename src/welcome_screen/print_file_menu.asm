@@ -16,7 +16,7 @@ print_file_menu:
     ; Go through the emufs file table and print out the names of the files
     ; File Table: 10 bytes filename + 4 bytes file offset from start + 4 bytes file size
 
-    mov si, 0x7e00                     ; emufs table location
+    mov si, emufs_table_addr
     add si, 18                         ; skip the first entry which is the kernel entry
 
     mov byte [num_files], 0
@@ -39,10 +39,12 @@ print_file_menu:
     
 .selected:
     mov byte [is_selected], 1
+    mov byte [char_color], 0x4f
     jmp .continue
 
 .not_selected:
     mov byte [is_selected], 0
+    mov byte [char_color], 0x1f
     jmp .continue
 
 .continue:
@@ -95,6 +97,7 @@ dx_for_file_labels: times 10 dw 0                 ; Allocating space for 10 dx f
 char_color: db 0x1f
 
 max_filename_len equ 10
+emufs_table_addr equ 0x7e00
 emufs_table_entry_size equ 18
 emufs_table_entry_size_value_offset equ 14
 

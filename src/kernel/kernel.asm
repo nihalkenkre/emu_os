@@ -9,15 +9,18 @@ start:
 
 %include "./src/welcome_screen/welcome_screen.asm"
 ;
-; ebx: start sector of kernel data
-; ecx: number of sectors for kernel data
+; bx: start sector of kernel data
+; cx: number of sectors for kernel data
 ;
 [bits 16]
 main:
 	mov ax, 0x0003
 	int 0x10
 
-	call print_welcome_screen
+	mov [kernel_data_start_sec], bx
+	mov [kernel_data_sec_count], cx
+
+	jmp print_welcome_screen
 
 	; mov si, msg_bye_kernel
 	; call print_string
@@ -40,5 +43,8 @@ main:
 
 msg_hello_kernel:	db 'Hello World from kernel!', 0
 msg_bye_kernel:		db 'Bye from Kernel!', 0
+
+kernel_data_start_sec: dw 0
+kernel_data_sec_count: dw 0
 
 %endif
