@@ -125,7 +125,6 @@ print_welcome_screen:
 
 
 .calculate_num_sectors:
-    add si, 4                           ; go to size value in the table entry
     lodsd                               ; size value in eax
 
     mov ecx, sector_size
@@ -139,24 +138,21 @@ print_welcome_screen:
 .load_sectors:
     mov ecx, eax                        ; number of sectors in ecx
     
-    ; calculate the destination address to load the app data
+    ; calculate the destination address to load the app data and store in di for load_sectors
 
     mov di, kernel_data_addr
 
-    xor ecx, ecx
-    mov cx, [kernel_data_sec_count]
+    xor edx, edx
+    mov dx, [kernel_data_sec_count]
 
     xor eax, eax
     mov ax, sector_size
 
-    mul cx
+    mul dx
 
-    add di, ax
+    add di, ax                      ; addr after the kernel sectors is in di, to load the app data to
 
-    push di
     call load_sectors
-    pop di
-
     call run_chip8_app
 
 .return:

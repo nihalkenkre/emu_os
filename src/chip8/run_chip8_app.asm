@@ -1,18 +1,29 @@
 %ifndef RUN_CHIP8
 %define RUN_CHIP8
 
+[bits 16]
+clear_screen_graphics:
+    push bp
+    mov bp, sp
+
+    mov sp, bp
+    pop bp
+
+    ret
+
 ;
 ; Runs the Chip8 program located in memory
 ;   di: program addr
 ;
-
 [bits 16]
 run_chip8_app:
     push bp
     mov bp, sp
 
-    mov ax, 0x0013
+    mov ax, 0x0013                        ; 320x200 graphics mode 
     int 0x10
+
+    call clear_screen_graphics
 
 .keyboard_loop:
     xor ax, ax
