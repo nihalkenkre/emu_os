@@ -72,8 +72,8 @@ print_file_menu:
 
     inc byte [num_files]                ; increment num files variable
 
-    mov word [top_padding], 0
-    mov word [left_padding], 29
+    mov byte [top_padding], 0
+    mov byte [left_padding], 29
     xor bx, bx
     mov byte bl, [char_color]
     call print_string                   ; print the file name until null char. TODO: limit the file name printing to 10 bytes max.
@@ -91,7 +91,6 @@ print_file_menu:
 
     ret
 
-num_files: db 0
 dx_for_file_labels: times 10 dw 0                 ; Allocating space for 10 dx for now. TODO: Make storage dynamic
 char_color: db 0x1f
 

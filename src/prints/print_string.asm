@@ -19,7 +19,18 @@ print_string:
 	push bx
 
 	mov ah, 0x9
+	cmp byte [is_selected], 1
+	je .selected
+
 	mov bl, 0x1f
+
+	jmp .continue
+
+.selected:
+	mov bl, 0x4f
+
+.continue:
+
 	mov cx, 1
 
 	add dh, [top_padding]
