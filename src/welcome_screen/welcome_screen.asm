@@ -131,11 +131,11 @@ print_welcome_screen:
     div ecx
 
     cmp edx, 0
-    je .load_sectors
+    je .prepare_to_run_chip8
 
     inc eax
 
-.load_sectors:
+.prepare_to_run_chip8:
     mov ecx, eax                        ; number of sectors in ecx
     
     ; calculate the destination address to load the app data and store in di for load_sectors
@@ -151,8 +151,6 @@ print_welcome_screen:
     mul dx
 
     add di, ax                      ; addr after the kernel sectors is in di, to load the app data to
-
-    call load_sectors
     call run_chip8_app
 
 .return:
