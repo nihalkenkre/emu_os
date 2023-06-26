@@ -1,33 +1,6 @@
 %ifndef RUN_CHIP8
 %define RUN_CHIP8
 
-[bits 16]
-clear_screen_graphics:
-    push bp
-    mov bp, sp
-
-    push ax
-    push es
-    push di
-
-    mov ax, 0xa000
-    mov es, ax
-    mov di, 0x0000
-
-    add di, 320 * 20
-
-    mov cx, 320 * 160
-    mov ax, 0x6b
-    rep stosb
-
-    pop di
-    pop es
-    pop ax
-
-    mov sp, bp
-    pop bp
-
-    ret
 
 [bits 16]
 fill_reserve_bytes:
@@ -240,12 +213,96 @@ fill_reserve_bytes:
     ret
 
 ;
+; Fill the screen with constant color
+;
+[bits 16]
+clear_screen_graphics:
+    push bp
+    mov bp, sp
+
+    push ax
+    push es
+    push di
+
+    mov ax, 0xa000
+    mov es, ax
+    mov di, 0x0000
+
+    add di, 320 * 20
+
+    mov cx, 320 * 160
+    mov ax, 0x6b
+    rep stosb
+
+    pop di
+    pop es
+    pop ax
+
+    mov sp, bp
+    pop bp
+
+    ret
+
+;
+; 'Blit' the display buffer to the screen
+;
+[bits 16]
+update_screen:
+    push bp
+    mov bp, sp
+
+    mov ax, 0xa000
+    mov es, ax
+
+    mov si, chip8_display_buffer
+    mov di, 320 * 21
+
+    ;; For each byte in the display buffer
+    ;; the vga buffer is filled with 5x5 byte square
+    mov cx, 32
+    .blit:
+        push cx
+        mov cx, 64
+
+        .line:
+            lodsb                      ; al contains the display buffer byte
+            push cx
+
+            mov bx, 5                  ; vertical side
+            .pixel:
+                mov cx, 5              ; horizontal line
+                rep stosb
+            
+                add di, 320
+                sub di, 5
+
+                dec bx
+                jnz .pixel
+
+            sub di, 320 * 5
+            add di, 5
+
+            pop cx
+            dec cx
+
+            jnz .line
+
+        add di, 320 * 5
+        sub di, 320
+
+        pop cx
+        dec cx
+        jnz .blit
+
+    mov sp, bp
+    pop bp
+
+    ret
+
+;
 ; Fetches the next 2 byte opcode from the 'chip8' memory and executes it
 ; Chip8 is Big Endian and x86 is Little Endian
 ; So the higher bytes of the opcode are stored as the lower bytes in the memory addr
-;
-; Params:
-;   si: ptr to memory
 ;
 [bits 16]
 execute_next_opcode:
@@ -289,166 +346,205 @@ execute_next_opcode:
 
     jmp .return
 
-.first_0:
-    pop ax                              ; retrieve the full opcode
+    .first_0:
+        pop ax                              ; retrieve the full opcode
     
-    cmp al, 0xe0
-    je ._00e0
+        cmp al, 0xe0
+        je ._00e0
 
-    cmp al, 0xee
-    je ._00ee
+        cmp al, 0xee
+        je ._00ee
 
-    jmp .return
+        jmp .return
 
-._00e0:
-    call clear_screen_graphics
-    add word [chip8_pc], 2
+    ._00e0:
+        call clear_screen_graphics
+        add word [chip8_pc], 2
 
-    jmp .return
+        jmp .return
 
-._00ee:
-    mov bx, [chip8_sp]                  ; sp is in bx
-    mov ax, [chip8_stack + bx]
-    mov [chip8_pc], ax
+    ._00ee:
+        mov bx, [chip8_sp]                  ; sp is in bx
+        mov ax, [chip8_stack + bx]
+        mov [chip8_pc], ax
 
-    dec byte [chip8_sp]
+        dec byte [chip8_sp]
 
-    jmp .return
+        jmp .return
 
-.first_1:
-    pop ax                              ; retrieve the full opcode
+    .first_1:
+        pop ax                              ; retrieve the full opcode
 
-    and ax, 0x0fff
-    mov [chip8_pc], ax
+        and ax, 0x0fff
+        mov [chip8_pc], ax
 
-    jmp .return
+        jmp .return
 
-.first_2:
-    pop ax
+    .first_2:
+        pop ax
 
-    and ax, 0x0fff                      ; filter out the new pc
+        and ax, 0x0fff                      ; filter out the new pc
 
-    mov cx, [chip8_pc]                  ; mov pc value to cx
-    add cx, 2                           ; add 2 to the pc
-    mov bx, [chip8_sp]                  ; mov sp value to bx
-    mov [chip8_stack + bx], cx          ; mov the pc value to the stack
+        mov cx, [chip8_pc]                  ; mov pc value to cx
+        add cx, 2                           ; add 2 to the pc
+        mov bx, [chip8_sp]                  ; mov sp value to bx
+        mov [chip8_stack + bx], cx          ; mov the pc value to the stack
 
-    inc byte [chip8_sp]                 ; increment sp since we pushed somethig on the stack
+        inc byte [chip8_sp]                 ; increment sp since we pushed somethig on the stack
 
-    mov [chip8_pc], ax                  ; mov new pc to the pc
+        mov [chip8_pc], ax                  ; mov new pc to the pc
     
-    jmp .return
+        jmp .return
 
-.first_6:
-    pop ax                              ; retrieve the full opcode
+    .first_6:
+        pop ax                              ; retrieve the full opcode
 
-    and ah, 0x0f
-    mov bl, ah
+        mov bx, chip8_V
+        xor bx, bx
+        and ah, 0x0f
+        mov bl, ah
 
-    mov [chip8_V + bx], al
-    add word [chip8_pc], 2
+        mov [chip8_V + bx], al
+        add word [chip8_pc], 2
 
-    jmp .return
+        jmp .return
 
-.first_a:
-    pop ax                              ; retrieve the full opcode
+    .first_a:
+        pop ax                              ; retrieve the full opcode
 
-    and ax, 0x0fff
-    mov [chip8_I], ax
+        and ax, 0x0fff
+        mov [chip8_I], ax
 
-    add word [chip8_pc], 2
+        add word [chip8_pc], 2
 
-    jmp .return
+        jmp .return
 
-.first_d:
-    pop ax                              ; retrieve the full opcode
+    .first_d:
+        pop ax                              ; retrieve the full opcode
     
-    and ax, 0x0fff                      ; *XYN
+        and ax, 0x0fff                      ; *XYN
 
-    push ax                             ; save xyn so we can extract x y n
-    and al, 0x0f
-    xor cx, cx
-    mov cl, al                          ; cl contains n
-    pop ax
+        push ax                             ; save xyn so we can extract x y n
+        and al, 0x0f
+        xor cx, cx
+        mov cl, al                          ; cl contains nn
+        mov byte [opcode_nn], cl
+        pop ax
 
-    push ax                             ; save xyn so we can extract x y n
-    and al, 0xf0
-    shr al, 4
-    xor bx, bx
-    mov bl, al                          ; bl contains y
-    pop ax
+        push ax                             ; save xyn so we can extract x y n
+        and al, 0xf0
+        shr al, 4
+        xor bx, bx
+        mov bl, al                          ; bl contains y
+        mov byte [opcode_yy], bl
+        pop ax
 
-    push ax                             ; save xyn so we can extract x y n
-    and ah, 0x0f
-    xor dx, dx
-    mov dl, ah                          ; dl contains x
-    pop ax
+        push ax                             ; save xyn so we can extract x y n
+        and ah, 0x0f
+        xor dx, dx
+        mov dl, ah                          ; dl contains x
+        mov byte [opcode_xx], dl
+        pop ax
 
-    ; Get the y co-ordinate, and store it in bl
-    mov bl, [chip8_V + bx]
-    and bl, 31
+        ; Get the y co-ordinate
+        mov bl, [chip8_V + bx]
+        and bl, 31
 
-    mov byte [chip8_V + 0xa], 0
+        mov byte [current_y], bl
 
-    mov ch, 0                           ; this will be the index of the counter, going to cl
+        ; Get the x co-ordinate
+        mov bx, dx
+        mov dl, [chip8_V + bx]
+        and dl, 63
 
-    .n_loop:
-        ; Get the Nth row byte into ax
-        ; row = chip8_memory[chip8_I + n]
+        mov byte [current_x], dl
+    
+        mov ax, 64
+        mul bx
+        add ax, dx                              ; ax = y * 64 + x
+
+        mov [current_display_buffer_offset], ax
+        mov byte [chip8_V + 0xf], 0
+
+        mov ch, 0                               ; this will be the index of the counter, going to cl(nn)
+
+        .n_loop:
+            ; Get the Nth row byte into ax
+            ; row = chip8_memory[chip8_I + n]
         
-        ; First calculate the chip_I + n
-        mov ax, [chip8_I]
+            ; First calculate the chip_I + n
+            mov ax, [chip8_I]
 
-        push cx
-        xchg ch, cl 
-        xor ch, ch
-        add ax, cx                          ; ax containx chip8_I + n
+            push cx
+            xchg ch, cl                         ; to get the current n into cl
+            xor ch, ch
+            add ax, cx                          ; ax containx chip8_I + n
+            pop cx
 
-        pop cx
+            ; mov ax to bx, ax cannot be used as an offset
+            mov bx, ax
+            xor ax, ax
+            mov al, [chip8_memory + bx]         ; al contains the Nth row byte
+            mov [nth_row_byte], al
 
-        ; mov ax to bx 
-        ; since bx can be used as an offset
-        push bx
-        mov bx, ax
-        xor ax, ax
-        mov al, [chip8_memory + bx]        ; al contains the Nth row byte
-        ; ror al, 4                          ; x86 little endian to chip8 big endian
-        pop bx
+            xor bx, bx
+            mov bx, [current_display_buffer_offset]
+
+            push cx
+            xor cx, cx
+            mov cl, 8
         
-        push cx                            ; cx will be used for row bittest
+            .bits_loop:
+                dec cl
+            
+                mov al, [chip8_display_buffer + bx]
+                cmp al, background_color
 
-        mov cx, 7                          ; bit index
+                je .display_pixel_is_bg
+                jne .display_pixel_is_fg
 
-        ; al contains the Nth row byte, chip8_display_buffer contains the bytes 
-        ;    currently in the display buffer
-        ; XOR the individual bits of al with the bits starting at chip8_display_buffer[x][y]
-        ;    and store the result in chip8_display_buffer[x][y]
-        .row_loop:
-        .row_byte_compare:                         ; check if row byte bit at cx is set
-            bt ax, cx
-        .display_compare:
-            push dx
-            mov dl, [chip8_display_buffer + dx]
-            mul dl,
-            bt dx, cx
-            pop dx
+                .display_pixel_is_bg:
+                    mov al, [nth_row_byte]
+                    bt ax, cx
 
-            jz .row_loop_end
+                    jnc .bits_loop_continue
 
-            dec cx
-            jmp .row_loop
+                    mov byte [chip8_display_buffer + bx], foreground_color
 
-        .row_loop_end:
+                    jmp .bits_loop_continue
 
-        pop cx
+                .display_pixel_is_fg:
+                    mov al, [nth_row_byte]
+                    bt ax, cx
 
-        inc byte ch
-        cmp ch, cl
-        jne .n_loop
+                    jnc .bits_loop_continue
 
-    add word [chip8_pc], 2
+                    mov byte [chip8_display_buffer + bx], background_color
+                    mov byte [chip8_V + 0xf], 1
 
-    jmp .return
+                .bits_loop_continue:
+
+                inc word bx                                 ; go to next pixel; equ x++
+
+                cmp cl, 0
+                jne .bits_loop
+
+            pop cx
+
+            add bx, 64                                      ; go to next scan line; equ y++
+            sub bx, 8
+
+            mov [current_display_buffer_offset], bx
+
+            inc byte ch
+            cmp ch, cl
+            jne .n_loop
+
+        add word [chip8_pc], 2
+
+        call update_screen
+
+        jmp .return
 
 .return:
     pop dx
@@ -461,6 +557,77 @@ execute_next_opcode:
 
     ret
 
+;
+; Test the display buffer to screen mapping
+;
+[bits 16]
+test_display_buffer:
+    push bp
+    mov bp, sp
+
+    xor ax, ax
+    mov es, ax
+    xor bx, bx
+    xor cx, cx
+    xor dx, dx
+
+    ; Fill a double line with the foreground color, top padding of 2
+
+    mov di, chip8_display_buffer
+    add di, 128
+    mov al, foreground_color
+    mov cl, 128
+
+    rep stosb
+
+    ; Update the vga memory
+    mov ax, 0xa000
+    mov es, ax
+
+    mov si, chip8_display_buffer
+    mov di, 320 * 21
+
+    ;; For each byte in the display buffer
+    ;; the vga buffer is filled with 5x5 byte square
+    mov cx, 32
+    .blit:
+        push cx
+        mov cx, 64
+
+        .line:
+            lodsb                      ; al contains the display buffer byte
+            push cx
+
+            mov bx, 5                  ; vertical side
+            .pixel:
+                mov cx, 5              ; horizontal line
+                rep stosb
+            
+                add di, 320
+                sub di, 5
+
+                dec bx
+                jnz .pixel
+
+            sub di, 320 * 5
+            add di, 5
+
+            pop cx
+            dec cx
+
+            jnz .line
+
+        add di, 320 * 5
+        sub di, 320
+
+        pop cx
+        dec cx
+        jnz .blit
+
+    mov sp, bp
+    pop bp
+
+    ret
 ;
 ; Loads the Chip8 program into memory and runs it.
 ; Params:
@@ -484,8 +651,6 @@ run_chip8_app:
 
     mov ax, 0xa000
     mov es, ax
-
-    mov di, 320 * 100 + 160
 
 .timer_loop:                                ; TIMER HACK !!!
     mov ecx, 0xffffff
@@ -523,19 +688,31 @@ run_chip8_app:
 
     ret
 
+background_color equ 0x6b
+foreground_color equ 0x1f
 
 esc_scan_code equ 0x01
 
 sector_size equ 512
 
-chip8_memory: times 4096 db 0               ; IMP: allocatin 4kb memory. Please adjust this to accomodate the maximum size of the available ROMs
-                                            ; addr where the interpreter starts, first 512 reserved. font data is here
-                                            ; app data can be stored at chip8_memory + 512
 chip8_pc: dw 0
 chip8_stack: times 16 dw 0
 chip8_sp: db 0                              ; This is an offset addr into the 'chip8_stack' memory
 chip8_V: times 16 db 0
 chip8_I: dw 0
-chip8_display_buffer: times 32 db 0         ; each bit of the 32 bytes is a pixel, which can be set/unset. each hor. line has 8 bytes, and ver. line has 4 bytes
+chip8_display_buffer: times 64 * 32 db background_color    ; background: 0x6b, foreground: 0x1f
+
+nth_row_byte: db 0
+display_byte: db 0
+opcode_xx: db 0
+opcode_yy: db 0
+opcode_nn: db 0
+current_n: db 0
+current_x: db 0
+current_y: db 0
+current_display_buffer_offset: dw 0
+chip8_memory: times 4096 db 0               ; IMP: allocatin 4kb memory. Please adjust this to accomodate the maximum size of the available ROMs
+                                            ; addr where the interpreter starts, first 512 reserved. font data is here
+                                            ; app data can be stored at chip8_memory + 512
 
 %endif

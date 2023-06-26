@@ -140,17 +140,17 @@ print_welcome_screen:
     
     ; calculate the destination address to load the app data and store in di for load_sectors
 
-    mov di, kernel_data_addr
+    ; mov di, kernel_data_addr
 
-    xor edx, edx
-    mov dx, [kernel_data_sec_count]
+    ; xor edx, edx
+    ; mov dx, [kernel_data_sec_count]
 
-    xor eax, eax
-    mov ax, sector_size
+    ; xor eax, eax
+    ; mov ax, sector_size
 
-    mul dx
+    ; mul dx
 
-    add di, ax                      ; addr after the kernel sectors is in di, to load the app data to
+    ; add di, ax                      ; addr after the kernel sectors is in di, to load the app data to
     call run_chip8_app
 
 .return:
