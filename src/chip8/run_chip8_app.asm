@@ -336,6 +336,9 @@ execute_next_opcode:
     cmp ah, 6
     je .first_6
 
+    cmp ah, 7
+    je .first_7
+
     cmp ah, 0xa
     je .first_a
 
@@ -399,12 +402,28 @@ execute_next_opcode:
     .first_6:
         pop ax                              ; retrieve the full opcode
 
-        mov bx, chip8_V
         xor bx, bx
         and ah, 0x0f
         mov bl, ah
 
         mov [chip8_V + bx], al
+        add word [chip8_pc], 2
+
+        jmp .return
+
+    .first_7:
+        pop ax
+
+        and ah, 0x0f
+        xor bx, bx
+        mov bl, ah
+
+        xor dx, dx
+        mov dl, [chip8_V + bx]
+        add dl, al
+
+        mov [chip8_V + bx], dl
+
         add word [chip8_pc], 2
 
         jmp .return
@@ -417,6 +436,14 @@ execute_next_opcode:
 
         add word [chip8_pc], 2
 
+        jmp .return
+
+    .first_c:
+        pop ax                              ; retrieve the full opcode
+        
+
+        add word [chip8_pc], 2
+        
         jmp .return
 
     .first_d:
@@ -656,10 +683,20 @@ run_chip8_app:
     mov ax, 0xa000
     mov es, ax
 
-.timer_loop:                                ; TIMER HACK !!!
-    mov ecx, 0xffffff
+.timer_loop:
+    ; mov ah, 0
+    ; int 0x1a
+    
+    ; add dx, 0x7f
+    ; mov bx, dx
+
+    mov ecx, 0xffff
 
 .timer_wait:
+    ; mov ah, 0
+    ; int 0x1a
+
+    ; cmp dx, bx
     dec ecx
     jnz .timer_wait
 

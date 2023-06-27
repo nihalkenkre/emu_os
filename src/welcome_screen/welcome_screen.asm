@@ -137,20 +137,7 @@ print_welcome_screen:
 
 .prepare_to_run_chip8:
     mov ecx, eax                        ; number of sectors in ecx
-    
-    ; calculate the destination address to load the app data and store in di for load_sectors
 
-    ; mov di, kernel_data_addr
-
-    ; xor edx, edx
-    ; mov dx, [kernel_data_sec_count]
-
-    ; xor eax, eax
-    ; mov ax, sector_size
-
-    ; mul dx
-
-    ; add di, ax                      ; addr after the kernel sectors is in di, to load the app data to
     call run_chip8_app
 
 .return:
@@ -160,7 +147,6 @@ print_welcome_screen:
     cli
     hlt
 
-test: db 'TEST', 0x0a, 0
 current_selection_index: db 0
 num_files: db 0
 file_menu_cursor: dw 0
