@@ -453,14 +453,18 @@ execute_next_opcode:
         mov byte [current_y], bl
 
         ; Get the x co-ordinate
+        push bx
         mov bx, dx
         mov dl, [chip8_V + bx]
         and dl, 63
+        pop bx
 
         mov byte [current_x], dl
     
         mov ax, 64
+        push dx
         mul bx
+        pop dx
         add ax, dx                              ; ax = y * 64 + x
 
         mov [current_display_buffer_offset], ax
