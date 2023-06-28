@@ -349,6 +349,9 @@ execute_next_opcode:
     cmp ah, 7
     je .first_7
 
+    cmp ah, 0xc
+    je .first_c
+
     cmp ah, 0xa
     je .first_a
 
@@ -377,9 +380,14 @@ execute_next_opcode:
         jmp .return
 
     ._00ee:
-        mov bx, [chip8_sp]                  ; sp is in bx
-        mov ax, [chip8_stack + bx]
-        mov [chip8_pc], ax
+        mov si, chip8_stack
+        add si, [chip8_sp]
+        mov di, chip8_pc
+        movsw
+
+        ; mov bx, [chip8_sp]                  ; sp is in bx
+        ; mov ax, [chip8_stack + bx]
+        ; mov [chip8_pc], ax
 
         dec byte [chip8_sp]
 
@@ -398,12 +406,18 @@ execute_next_opcode:
 
         and ax, 0x0fff                      ; filter out the new pc
 
-        mov cx, [chip8_pc]                  ; mov pc value to cx
-        add cx, 2                           ; add 2 to the pc
-        mov bx, [chip8_sp]                  ; mov sp value to bx
-        mov [chip8_stack + bx], cx          ; mov the pc value to the stack
+        mov si, chip8_pc
+        add word [si], 2
+        mov di, chip8_stack
+        add di, [chip8_sp]
+        movsw
 
-        inc byte [chip8_sp]                 ; increment sp since we pushed somethig on the stack
+        ; mov cx, [chip8_pc]                  ; mov pc value to cx
+        ; add cx, 2                           ; add 2 to the pc
+        ; mov bx, [chip8_sp]                  ; mov sp value to bx
+        ; mov [chip8_stack + bx], cx          ; mov the pc value to the stack
+
+        inc byte [chip8_sp]                 ; increment sp since we pushed something on the stack
 
         mov [chip8_pc], ax                  ; mov new pc to the pc
     
@@ -451,7 +465,6 @@ execute_next_opcode:
     .first_c:
         pop ax                              ; retrieve the full opcode
         
-
         add word [chip8_pc], 2
         
         jmp .return
@@ -463,29 +476,28 @@ execute_next_opcode:
 
         push ax                             ; save xyn so we can extract x y n
         and al, 0x0f
-        xor cx, cx
-        mov cl, al                          ; cl contains nn
-        mov byte [opcode_nn], cl
+        mov di, opcode_nn
+        stosb
+
         pop ax
 
         push ax                             ; save xyn so we can extract x y n
         and al, 0xf0
         shr al, 4
-        xor bx, bx
-        mov bl, al                          ; bl contains y
-        mov byte [opcode_yy], bl
+        mov di, opcode_yy
+        stosb
         pop ax
 
         push ax                             ; save xyn so we can extract x y n
         and ah, 0x0f
-        xor dx, dx
-        mov dl, ah                          ; dl contains x
-        mov byte [opcode_xx], dl
+        mov al, ah
+        mov di, opcode_xx
+        stosb
         pop ax
 
         ; Get the y co-ordinate
         mov si, chip8_V
-        add si, bx
+        add si, [opcode_yy]
         mov di, current_y
         movsb
 
@@ -493,7 +505,7 @@ execute_next_opcode:
 
         ; Get the x co-ordinate
         mov si, chip8_V
-        add si, dx
+        add si, [opcode_xx]
         mov di, current_x
         movsb
 
@@ -506,24 +518,16 @@ execute_next_opcode:
         mov [current_display_buffer_offset], ax
         mov byte [chip8_V + 0xf], 0
 
-        mov ch, 0                               ; this will be the index of the counter, going to cl(nn)
+        mov cl, 0                               ; this will be the index of the counter, going to cl(nn)
 
         .n_loop:
             ; Get the Nth row byte into ax
             ; row = chip8_memory[chip8_I + n]
         
             ; First calculate the chip_I + n
-            mov ax, [chip8_I]
-
-            push cx
-            xchg ch, cl                         ; to get the current n into cl
-            xor ch, ch
-            add ax, cx                          ; ax containx chip8_I + n
-            pop cx
-
-            ; move the byte from memory offset by ax into chip8_memory to nth_row_byte
             mov si, chip8_memory
-            add si, ax
+            add si, [chip8_I]
+            add si, cx
             mov di, nth_row_byte
             movsb
 
@@ -576,8 +580,8 @@ execute_next_opcode:
 
             mov [current_display_buffer_offset], bx
 
-            inc byte ch
-            cmp ch, cl
+            inc byte cl
+            cmp cl, [opcode_nn]
             jne .n_loop
 
         add word [chip8_pc], 2
@@ -771,19 +775,19 @@ sector_size equ 512
 
 chip8_pc: dw 0
 chip8_stack: times 16 dw 0
-chip8_sp: db 0                              ; This is an offset addr into the 'chip8_stack' memory
+chip8_sp: dw 0                              ; This is an offset addr into the 'chip8_stack' memory
 chip8_V: times 16 db 0
 chip8_I: dw 0
 chip8_display_buffer: times 64 * 32 db background_color    ; background: 0x6b, foreground: 0x1f
 
 nth_row_byte: db 0
 display_byte: db 0
-opcode_xx: db 0
-opcode_yy: db 0
-opcode_nn: db 0
-current_n: db 0
-current_x: db 0
-current_y: db 0
+opcode_xx: dw 0
+opcode_yy: dw 0
+opcode_nn: dw 0
+current_n: dw 0
+current_x: dw 0
+current_y: dw 0
 current_display_buffer_offset: dw 0
 chip8_memory: times 4096 db 0               ; IMP: allocatin 4kb memory. Please adjust this to accomodate the maximum size of the available ROMs
                                             ; addr where the interpreter starts, first 512 reserved. font data is here

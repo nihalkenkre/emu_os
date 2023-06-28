@@ -7,6 +7,11 @@
 %include "./src/io/load_sectors_16.asm"
 %include "./src/chip8/run_chip8_app.asm"
 
+;
+; Displays the welcome screen
+; Params:
+;   dx: Cursor position, dh: row #, dy: col #
+;
 [bits 16]
 print_welcome_screen:
     push bp
