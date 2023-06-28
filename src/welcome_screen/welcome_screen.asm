@@ -12,6 +12,9 @@ print_welcome_screen:
     push bp
     mov bp, sp
 
+    xor dx, dx
+    xor ax, ax
+
     mov ax, 0x0003
     int 0x10
 
@@ -123,7 +126,6 @@ print_welcome_screen:
 
     mov ebx, eax                        ; start sector is in ebx
 
-
 .calculate_num_sectors:
     lodsd                               ; size value in eax
 
@@ -138,7 +140,7 @@ print_welcome_screen:
 .prepare_to_run_chip8:
     mov ecx, eax                        ; number of sectors in ecx
 
-    call run_chip8_app
+    jmp run_chip8_app
 
 .return:
     mov sp, bp

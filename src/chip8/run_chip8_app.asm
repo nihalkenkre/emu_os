@@ -251,6 +251,11 @@ update_screen:
     push bp
     mov bp, sp
 
+    push ax
+    push es
+    push si
+    push di
+
     mov ax, 0xa000
     mov es, ax
 
@@ -293,6 +298,11 @@ update_screen:
         pop cx
         dec cx
         jnz .blit
+
+    pop di
+    pop si
+    pop es
+    pop ax
 
     mov sp, bp
     pop bp
@@ -474,25 +484,24 @@ execute_next_opcode:
         pop ax
 
         ; Get the y co-ordinate
-        mov bl, [chip8_V + bx]
-        and bl, 31
+        mov si, chip8_V
+        add si, bx
+        mov di, current_y
+        movsb
 
-        mov byte [current_y], bl
+        and byte [current_y], 31
 
         ; Get the x co-ordinate
-        push bx
-        mov bx, dx
-        mov dl, [chip8_V + bx]
-        and dl, 63
-        pop bx
+        mov si, chip8_V
+        add si, dx
+        mov di, current_x
+        movsb
 
-        mov byte [current_x], dl
+        and byte [current_x], 63
     
-        mov ax, 64
-        push dx
-        mul bx
-        pop dx
-        add ax, dx                              ; ax = y * 64 + x
+        mov al, 64
+        mul byte [current_y]
+        add al, [current_x]                              ; ax = y * 64 + x
 
         mov [current_display_buffer_offset], ax
         mov byte [chip8_V + 0xf], 0
@@ -512,11 +521,11 @@ execute_next_opcode:
             add ax, cx                          ; ax containx chip8_I + n
             pop cx
 
-            ; mov ax to bx, ax cannot be used as an offset
-            mov bx, ax
-            xor ax, ax
-            mov al, [chip8_memory + bx]         ; al contains the Nth row byte
-            mov [nth_row_byte], al
+            ; move the byte from memory offset by ax into chip8_memory to nth_row_byte
+            mov si, chip8_memory
+            add si, ax
+            mov di, nth_row_byte
+            movsb
 
             xor bx, bx
             mov bx, [current_display_buffer_offset]
@@ -596,6 +605,8 @@ test_display_buffer:
     push bp
     mov bp, sp
 
+    push es
+
     xor ax, ax
     mov es, ax
     xor bx, bx
@@ -655,6 +666,8 @@ test_display_buffer:
         dec cx
         jnz .blit
 
+    pop es
+
     mov sp, bp
     pop bp
 
@@ -670,6 +683,8 @@ run_chip8_app:
     push bp
     mov bp, sp
 
+    push es
+
     call fill_reserve_bytes
 
     mov word [chip8_pc], chip8_memory + 0x200
@@ -680,9 +695,6 @@ run_chip8_app:
     mov ax, 0x0013                          ; 320x200 graphics mode 
     int 0x10
 
-    mov ax, 0xa000
-    mov es, ax
-
 .timer_loop:
     ; mov ah, 0
     ; int 0x1a
@@ -690,7 +702,10 @@ run_chip8_app:
     ; add dx, 0x7f
     ; mov bx, dx
 
-    mov ecx, 0xffff
+    mov ecx, 0xfffff
+
+    ; mov cx, [0x046c]
+    ; add cx, 0xf
 
 .timer_wait:
     ; mov ah, 0
@@ -698,6 +713,9 @@ run_chip8_app:
 
     ; cmp dx, bx
     dec ecx
+
+    ; mov bx, [0x046c]
+    ; cmp cx, [0x046c]
     jnz .timer_wait
 
     call execute_next_opcode
@@ -722,10 +740,25 @@ run_chip8_app:
     jmp .timer_loop
 
 .esc_key:
-    jmp print_welcome_screen
+
+    pop es
+    
+    ;; clear out display buffer
+    mov cx, 64 * 32
+    mov ax, background_color
+    mov di, chip8_display_buffer
+    rep stosb
+
+    ;; clear out chip8_memory
+    mov cx, 4096
+    mov ax, 0
+    mov di, chip8_memory
+    rep stosb
 
     mov sp, bp
     pop bp
+
+    jmp print_welcome_screen
 
     ret
 
