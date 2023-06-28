@@ -55,6 +55,8 @@ print_welcome_screen:
     cmp ah, enter_key_scan_code
     je .enter_key
 
+    jmp .keyboard_loop
+
 .up_arrow:
     cmp byte [current_selection_index], 0
     je .index_to_last

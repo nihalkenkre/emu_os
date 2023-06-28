@@ -324,15 +324,18 @@ execute_next_opcode:
     push cx
     push dx
 
-    mov bx, [chip8_pc]
-    mov ax, [bx]                        ; opcode is in ax
+    mov si, chip8_memory
+    add si, [chip8_pc]
+    lodsw
     ror ax, 8                           ; converting the 2 byte x86 Little Endian data to Chip8 Big Endian data
 
     ;; Check the most significant nibble of the opcode to determine
     ;; the functionality required
     push ax                             ; this value will be needed to check the complete opcode
     and ax, 0xf000
-    shr ah, 4                           ; this will leave the most significant nibble in ah
+    shr ah, 4                           ; this will leave only the most significant nibble in ah
+
+    add word [chip8_pc], 2
 
     cmp ah, 0
     je .first_0
@@ -343,20 +346,44 @@ execute_next_opcode:
     cmp ah, 2
     je .first_2
 
+    cmp ah, 3
+    je .first_3
+
+    cmp ah, 4
+    je .first_4
+
+    cmp ah, 5
+    je .first_5
+
     cmp ah, 6
     je .first_6
 
     cmp ah, 7
     je .first_7
 
-    cmp ah, 0xc
-    je .first_c
+    cmp ah, 8
+    je .first_8
+
+    cmp ah, 9
+    je .first_9
 
     cmp ah, 0xa
     je .first_a
 
+    cmp ah, 0xb
+    je .first_b
+
+    cmp ah, 0xc
+    je .first_c
+
     cmp ah, 0xd
     je .first_d
+
+    cmp ah, 0xe
+    je .first_e
+
+    cmp ah, 0xf
+    je .first_f
 
     add word [chip8_pc], 2
 
@@ -373,23 +400,21 @@ execute_next_opcode:
 
         jmp .return
 
-    ._00e0:
-        call clear_screen_graphics
-        add word [chip8_pc], 2
+        ._00e0:
+            call clear_screen_graphics
 
-        jmp .return
+            jmp .return
 
-    ._00ee:
-        mov si, chip8_stack
-        add si, [chip8_sp]
-        mov di, chip8_pc
-        movsw
+        ._00ee:
+            mov si, chip8_stack
+            sub word [chip8_sp], 2
+            add si, [chip8_sp]
 
-        ; mov bx, [chip8_sp]                  ; sp is in bx
-        ; mov ax, [chip8_stack + bx]
-        ; mov [chip8_pc], ax
+            mov di, chip8_pc
 
-        dec byte [chip8_sp]
+            movsw
+
+            dec word [chip8_sp]
 
         jmp .return
 
@@ -407,7 +432,6 @@ execute_next_opcode:
         and ax, 0x0fff                      ; filter out the new pc
 
         mov si, chip8_pc
-        add word [si], 2
         mov di, chip8_stack
         add di, [chip8_sp]
         movsw
@@ -417,10 +441,79 @@ execute_next_opcode:
         ; mov bx, [chip8_sp]                  ; mov sp value to bx
         ; mov [chip8_stack + bx], cx          ; mov the pc value to the stack
 
-        inc byte [chip8_sp]                 ; increment sp since we pushed something on the stack
+        inc word [chip8_sp]                 ; increment sp since we pushed something on the stack
+        inc word [chip8_sp]                 ; increment sp since we pushed something on the stack
 
         mov [chip8_pc], ax                  ; mov new pc to the pc
     
+        jmp .return
+
+    .first_3:
+        pop ax
+
+        and ax, 0x0fff                      ; *xkk
+
+        push ax
+        shr ax, 8
+        mov si, chip8_V
+        add si, ax
+        pop ax
+
+        and ax, 0x00ff
+
+        cmp [si], al
+        jne .first3_continue
+        add word [chip8_pc], 2          ; skip next inst if eq
+
+        .first3_continue:
+    
+        jmp .return
+
+    .first_4:
+        pop ax
+        and ax, 0x0fff                      ; *xkk
+
+        push ax
+        shr ax, 8
+        mov si, chip8_V
+        add si, ax
+        pop ax
+
+        and ax, 0x00ff
+
+        cmp [si], al
+        je .first_4_continue
+        add word [chip8_pc], 2          ; skip next inst if eq
+
+        .first_4_continue:
+    
+        jmp .return
+
+    .first_5:
+        pop ax
+
+        and ax, 0x0f00
+
+        mov si, chip8_V
+        push ax
+        shr ax, 8
+        add si, ax                  ; si -> vx
+        pop ax
+
+        mov di, chip8_V
+        push ax
+        and ax, 0x00f0
+        shr ax, 4
+        add di, ax                  ; di -> vy
+        pop ax
+
+        cmpsb
+
+        jne .first_5_continue
+        add word [chip8_pc], 2
+
+        .first_5_continue:
+
         jmp .return
 
     .first_6:
@@ -430,8 +523,11 @@ execute_next_opcode:
         and ah, 0x0f
         mov bl, ah
 
-        mov [chip8_V + bx], al
-        add word [chip8_pc], 2
+        ; mov [chip8_V + bx], al
+        mov di, chip8_V
+        add di, bx
+        stosb
+
 
         jmp .return
 
@@ -442,13 +538,175 @@ execute_next_opcode:
         xor bx, bx
         mov bl, ah
 
-        xor dx, dx
-        mov dl, [chip8_V + bx]
-        add dl, al
+        mov si, chip8_V
+        add si, bx
+        mov di, chip8_V
+        add di, bx
 
-        mov [chip8_V + bx], dl
+        add al, [si]
+        stosb
 
+        jmp .return
+
+    .first_8:
+        pop ax
+
+        push ax
+        and ax, 0x000f
+        mov bx, ax              ; mode is in bx
+        pop ax
+
+        mov si, chip8_V
+        push ax
+        and ah, 0
+        shr ax, 4
+        add si, ax              ; si -> vy
+        pop ax
+
+        mov di, chip8_V
+        push ax
+        shr ax, 8
+        and al, 0x0f
+        add di, ax              ; di -> vx
+        pop ax
+
+        cmp bx, 0
+        je .first_8_mode_0
+
+        cmp bx, 1
+        je .first_8_mode_1
+
+        cmp bx, 2
+        je .first_8_mode_2
+
+        cmp bx, 3
+        je .first_8_mode_3
+
+        cmp bx, 4
+        je .first_8_mode_4
+
+        cmp bx, 5
+        je .first_8_mode_5
+
+        cmp bx, 6
+        je .first_8_mode_6
+
+        cmp bx, 7
+        je .first_8_mode_7
+
+        cmp bx, 0xe
+        je .first_8_mode_e
+
+        jmp .first_8_continue
+
+        .first_8_mode_0:
+            movsb
+            jmp .first_8_continue
+
+        .first_8_mode_1:
+            xor ax, ax
+            lodsb
+            or al, [di]
+            stosb
+
+            jmp .first_8_continue
+
+        .first_8_mode_2:
+            xor ax, ax
+            lodsb
+            and al, [di]
+            stosb
+
+            jmp .first_8_continue
+
+        .first_8_mode_3:
+            xor ax, ax
+            lodsb
+            xor al, [di]
+            stosb
+
+            jmp .first_8_continue
+
+        .first_8_mode_4:
+            xor ax, ax
+            lodsb
+            add al, [di]
+            stosb
+
+            jnc .first_8_continue
+
+            mov byte [chip8_V + 0xf], 1
+
+            jmp .first_8_continue
+        
+        .first_8_mode_5:
+            xor ax, ax
+            lodsb
+            sub [di], al
+
+            jc .first_8_continue
+
+            mov byte [chip8_V + 0xf], 1
+            
+            jmp .first_8_continue
+        
+        .first_8_mode_6:
+            shr byte [di], 1
+
+            jnc .first_8_continue
+
+            mov byte [chip8_V + 0xf], 1
+
+            jmp .first_8_continue
+        
+        .first_8_mode_7:
+            lodsb
+
+            sub al, [di]
+            stosb
+
+            jc .first_8_continue
+            mov byte [chip8_V + 0xf], 1
+            
+            jmp .first_8_continue
+
+        .first_8_mode_e:
+            shl byte [di], 1
+
+            jnc .first_8_continue
+
+            mov byte [chip8_V + 0xf], 1
+
+            jmp .first_8_continue
+
+        .first_8_continue:
+
+        jmp .return
+
+    .first_9:
+        pop ax
+        push ax
+
+        and ax, 0x0f00
+
+        mov si, chip8_V
+        shr ax, 8
+        add si, ax                  ; si -> vx
+        pop ax
+
+        mov di, chip8_V
+        push ax
+        and ax, 0x00f0
+        shr ax, 4
+        add di, ax                  ; di -> vy
+        pop ax
+
+        cmpsb
+
+        je .first_9_continue
         add word [chip8_pc], 2
+
+        .first_9_continue:
 
         jmp .return
 
@@ -458,14 +716,21 @@ execute_next_opcode:
         and ax, 0x0fff
         mov [chip8_I], ax
 
-        add word [chip8_pc], 2
+        jmp .return
+
+    .first_b:
+        pop ax
+
+        and ax, 0x0fff
+
+        add al, [chip8_V]
+
+        mov [chip8_pc], ax
 
         jmp .return
 
     .first_c:
         pop ax                              ; retrieve the full opcode
-        
-        add word [chip8_pc], 2
         
         jmp .return
 
@@ -584,9 +849,133 @@ execute_next_opcode:
             cmp cl, [opcode_nn]
             jne .n_loop
 
-        add word [chip8_pc], 2
-
         call update_screen
+
+        jmp .return
+
+    .first_e:
+        pop ax
+
+        jmp .return
+
+    .first_f:
+        pop ax
+
+        cmp al, 7
+        je .first_f_7
+
+        cmp al, 0x15
+        je .first_f_15
+
+        cmp al, 0x18
+        je .first_f_18
+
+        cmp al, 0x1e
+        je .first_f_1e
+
+        cmp al, 0x33
+        je .first_f_33
+
+        cmp al, 0x55
+        je .first_f_55
+
+        cmp al, 0x65
+        je .first_f_65
+
+        jmp .return
+
+        .first_f_7:
+            mov si, chip8_delay_timer
+            
+            and ah, 0x0f
+            shr ax, 8
+            mov di, chip8_V
+            add di, ax
+            movsb
+
+            jmp .return
+
+        .first_f_15:
+            and ah, 0x0f
+            shr ax, 8
+            mov si, chip8_V
+            add si, ax
+
+            mov di, chip8_delay_timer
+            movsb
+
+            jmp .return
+
+        .first_f_18:
+            and ah, 0x0f
+            shr ax, 8
+            mov si, chip8_V
+            add si, ax
+
+            mov di, chip8_sound_timer
+            movsb
+
+            jmp .return
+
+        .first_f_1e:
+            and ah, 0x0f
+            shr ax, 8
+
+            mov si, chip8_V
+            add si, ax
+
+            lodsb
+
+            add [chip8_I], al
+
+            jmp .return
+
+        .first_f_33:
+            and ah, 0x0f
+            shr ax, 8
+
+            mov si, chip8_V
+            add si, ax
+
+            lodsb
+
+            jmp .return
+
+        .first_f_55:
+            and ah, 0x0f
+            shr ax, 8
+
+            mov si, chip8_V
+            mov di, chip8_memory
+            add di, [chip8_I]
+
+            .55_mem_cpy:
+                movsb
+
+                test al, al
+                jz .return
+                dec ax
+
+                jmp .55_mem_cpy
+        
+            jmp .return
+
+        .first_f_65:
+            and ah, 0x0f
+            shr ax, 8
+
+            mov si, chip8_memory
+            add si, [chip8_I]
+            mov di, chip8_V
+
+            .65_mem_cpy:
+                movsb
+
+                test al, al
+                jz .return
+                dec ax
+
+                jmp .65_mem_cpy
 
         jmp .return
 
@@ -691,8 +1080,9 @@ run_chip8_app:
 
     call fill_reserve_bytes
 
-    mov word [chip8_pc], chip8_memory + 0x200
-    mov di, [chip8_pc]
+    mov word [chip8_pc], 0x200
+    mov di, chip8_memory
+    add di, [chip8_pc]
 
     call load_sectors
 
@@ -775,10 +1165,12 @@ sector_size equ 512
 
 chip8_pc: dw 0
 chip8_stack: times 16 dw 0
-chip8_sp: dw 0                              ; This is an offset addr into the 'chip8_stack' memory
+chip8_sp: dw 0                              ; This is an offset addr into the 'chip8_stack'
 chip8_V: times 16 db 0
 chip8_I: dw 0
 chip8_display_buffer: times 64 * 32 db background_color    ; background: 0x6b, foreground: 0x1f
+chip8_delay_timer: db 0
+chip8_sound_timer: db 0
 
 nth_row_byte: db 0
 display_byte: db 0
