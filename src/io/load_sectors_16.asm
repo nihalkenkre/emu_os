@@ -13,6 +13,8 @@ load_sectors:
     push bp
     mov bp, sp
 
+    push di
+
     push ax
     push bx
     push cx                 ; push the number of sectors for later use
@@ -64,6 +66,8 @@ load_sectors:
     pop cx                  ; pop the number of sectors for later use
     pop bx
     pop ax
+
+    pop di
 
     mov sp, bp
     pop bp

@@ -5,6 +5,7 @@ SRC_DIR=src
 BUILD_DIR=build
 
 IMG_DIR=assets/imgs
+ROM_DIR=assets/roms
 
 .PHONY: all vbe floppy_image boot kernel test always run clean
 
@@ -16,10 +17,12 @@ $(BUILD_DIR)/main_floppy.img: boot kernel test
 	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img count=28800
 	dd if=$(BUILD_DIR)/boot.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
 	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
-	# ../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(IMG_DIR)/RGB8.dat
-	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/a.bin
-	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/b.bin
-	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/c.bin
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Chip8Logo
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/IBMLogo
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Corax+
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Flags
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Quirks
+	../emufs_tools/build/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Keypad
 
 boot: $(BUILD_DIR)/boot.bin
 
