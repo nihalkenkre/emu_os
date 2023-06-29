@@ -7,10 +7,18 @@
 %include "./src/io/load_sectors_16.asm"
 %include "./src/chip8/run_chip8_app.asm"
 
+;
+; Displays the welcome screen
+; Params:
+;   dx: Cursor position, dh: row #, dy: col #
+;
 [bits 16]
 print_welcome_screen:
     push bp
     mov bp, sp
+
+    xor dx, dx
+    xor ax, ax
 
     mov ax, 0x0003
     int 0x10
@@ -46,6 +54,8 @@ print_welcome_screen:
 
     cmp ah, enter_key_scan_code
     je .enter_key
+
+    jmp .keyboard_loop
 
 .up_arrow:
     cmp byte [current_selection_index], 0
@@ -123,41 +133,21 @@ print_welcome_screen:
 
     mov ebx, eax                        ; start sector is in ebx
 
-
 .calculate_num_sectors:
-    add si, 4                           ; go to size value in the table entry
     lodsd                               ; size value in eax
 
     mov ecx, sector_size
     div ecx
 
     cmp edx, 0
-    je .load_sectors
+    je .prepare_to_run_chip8
 
     inc eax
 
-.load_sectors:
+.prepare_to_run_chip8:
     mov ecx, eax                        ; number of sectors in ecx
-    
-    ; calculate the destination address to load the app data
 
-    mov di, kernel_data_addr
-
-    xor ecx, ecx
-    mov cx, [kernel_data_sec_count]
-
-    xor eax, eax
-    mov ax, sector_size
-
-    mul cx
-
-    add di, ax
-
-    push di
-    call load_sectors
-    pop di
-
-    call run_chip8_app
+    jmp run_chip8_app
 
 .return:
     mov sp, bp
@@ -166,7 +156,6 @@ print_welcome_screen:
     cli
     hlt
 
-test: db 'TEST', 0x0a, 0
 current_selection_index: db 0
 num_files: db 0
 file_menu_cursor: dw 0
