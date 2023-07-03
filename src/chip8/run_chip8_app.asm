@@ -23,7 +23,7 @@ clear_screen_graphics:
     add di, 320 * 20
 
     mov cx, 320 * 160
-    mov ax, 0x6b
+    mov ax, background_color
     rep stosb
 
     pop di
@@ -535,7 +535,6 @@ execute_next_opcode:
         and al, 0x0f
         mov di, opcode_nn
         stosb
-
         pop ax
 
         push ax                             ; save xyn so we can extract x y n
@@ -570,12 +569,12 @@ execute_next_opcode:
     
         mov al, 64
         mul byte [current_y]
-        add al, [current_x]                              ; ax = y * 64 + x
+        add al, [current_x]                             ; ax = y * 64 + x
 
         mov [current_display_buffer_offset], ax
         mov byte [chip8_V + 0xf], 0
 
-        mov cl, 0                               ; this will be the index of the counter, going to cl(nn)
+        mov cl, 0                                       ; this will be the index of the counter, going to cl(nn)
 
         .n_loop:
             ; Get the Nth row byte into ax
@@ -948,8 +947,8 @@ run_chip8_app:
 
     ret
 
-background_color equ 0x6b
-foreground_color equ 0x1f
+background_color equ 0x01
+foreground_color equ 0x1d
 
 esc_scan_code equ 0x01
 

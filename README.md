@@ -46,7 +46,7 @@ If testing with `qemu` is desired please install the `qemu-x86` package.
 
 
 `VcXsrv` is required to display the GUI for the apps from WSL.
-Avaiable from [Sourceforge](https://sourceforge.net/projects/vcxsrv/)
+Available from [Sourceforge](https://sourceforge.net/projects/vcxsrv/)
 
 Using `bochs-sdl2` for the display only showed the graphics mode 'drawing' output but the initial teletype output would always be black. `bochs-x` displays all types of modes as expected.
 Also the application startup time reduced greatly with bochs-x compared to bochs-sdl2.
@@ -60,10 +60,10 @@ Also the application startup time reduced greatly with bochs-x compared to bochs
 - copy the rest of the files, e.g. kernel, and chip8 apps into the image.
 
 `make clean` will
-- delele everything from the `build` folder.
+- delete everything from the `build` folder.
 
 `make debug` will
 - run the image through bochs emulator.
 
 `make run` will
-- run the image through the qmeu emulator.
+- run the image through the qemu emulator.

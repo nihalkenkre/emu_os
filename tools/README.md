@@ -4,7 +4,7 @@ Custom tools for dealing with the EMU OS filesystem, since it is a non standard 
 
 ## Current disk layout
 
-- The bootloader is stored in the first 512 bytes of the disk.
+- The boot loader is stored in the first 512 bytes of the disk.
 - The EMU File Table is stored in the next 512 bytes.
 - The table contains tightly packed table entries of the format
 ```
@@ -19,4 +19,4 @@ Custom tools for dealing with the EMU OS filesystem, since it is a non standard 
 ```
 emufs_copy <disk_image> <file_to_copy>
 ```
-It takes a file and copies the raw data to the image. It adds an entry to the file table.
+It takes a file and copies the raw data to the image. It adds an entry to the file table. This tool is built by the `Makefile` in the root directory, and invoked when required.
