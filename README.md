@@ -40,7 +40,7 @@ The required packages can be installed with
 ```
 sudo apt install nasm gcc make bochs bochs-x bochsbios vgabios 
 ```
-You might also need to install `libalsasound2`, if bochs fails to start with `failed to find snd card`.
+You might also need to install `libalsasound2`.
 
 If testing with `qemu` is desired please install the `qemu-x86` package.
 
@@ -55,9 +55,10 @@ Also the application startup time reduced greatly with bochs-x compared to bochs
 
 `make` will 
 - compile the assembly files in to freestanding binaries, using `nasm`.
+- compile the tools into OS binaries.
 - create a 15 MB blank file in the `build` folder.  
 - copy the `boot` binary into the image.
-- copy the rest of the files, e.g. kernel, and chip8 apps into the image.
+- copy the kernel and the Chip8 roms to the disk image using `emufs_copy`.
 
 `make clean` will
 - delete everything from the `build` folder.
