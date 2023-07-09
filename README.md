@@ -56,7 +56,7 @@ Also the application startup time reduced greatly with bochs-x compared to bochs
 `make` will 
 - compile the assembly files in to freestanding binaries, using `nasm`.
 - compile the tools into OS binaries.
-- create a 15 MB blank file in the `build` folder.  
+- create a 15 MB blank disk image file in the `build` folder.  
 - copy the `boot` binary into the image.
 - copy the kernel and the Chip8 roms to the disk image using `emufs_copy`.
 
@@ -68,3 +68,11 @@ Also the application startup time reduced greatly with bochs-x compared to bochs
 
 `make run` will
 - run the image through the qemu emulator.
+
+### Adding ROMs to disk image
+
+`build/emufs_copy <disk_image> <rom>`
+
+It will be added to the disk image and a table entry with be added to the table. It will show up in the main menu when the OS boots up.
+
+The file table size is `512 bytes` and each table entry is `14 bytes`.
