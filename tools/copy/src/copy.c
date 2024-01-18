@@ -11,14 +11,14 @@ typedef struct emufs_table_entry
     uint32_t file_size;
 } __attribute__((packed)) emufs_table_entry;
 
-uint16_t BOOT_SECTOR_SIZE = 512;
-uint16_t EMUFS_TABLE_SIZE = 512;
-uint16_t PADDING_BOUNDARY = 512;
-
-emufs_table_entry *g_table = NULL;
-
 int main(int argc, char **argv)
 {
+    uint16_t BOOT_SECTOR_SIZE = 512;
+    uint16_t EMUFS_TABLE_SIZE = 512;
+    uint16_t PADDING_BOUNDARY = 512;
+
+    emufs_table_entry *g_table = NULL;
+
     int8_t ret_val = 0;
     uint32_t emufs_table_entry_size = (uint32_t)sizeof(emufs_table_entry);
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     FILE *img = fopen(argv[1], "rb+");
     if (!img)
     {
-        printf("Could not image %s for reading/writing.\n", argv[1]);
+        printf("Could not open image %s for reading/writing.\n", argv[1]);
         ret_val = -1;
         goto shutdown;
     }
