@@ -13,24 +13,60 @@ start:
 
 ; struct filename_details
 ; { 
-;   file_found: 1 if file found, 0 otherwise
-;   file_offset: word
+;   file_found: byte 1 if file found, 0 otherwise
+;   file_offset: dword
 ;   file_size: dword    
 ; }
 
-; arg0: ptr to return struct                    ebp + 4
-; arg1: ptr to file name                        ebp + 6
-; arg2: ptr to emufs table                      ebp + 8
+; arg0: ptr to return struct                    bp + 4
+; arg1: ptr to emufs table                      bp + 6
+; arg2: ptr to file name                        bp + 8
 ;
-; ret: addr to the struct obj passed by caller ax
+; ret: addr to the struct obj passed by caller  ax
 get_filename_details:
     push bp
     mov bp, sp
 
+    ; sp - 4 = esi
+    ; sp - 8 = edi
+    ; sp - 12 = ebx
+    sub sp, 12                      ; allocate local variable space
+
+    mov [bp - 4], esi               ; save esi
+    mov [bp - 8], edi               ; save edi
+    mov [bp - 12], ebx              ; save ebx
+
+    movzx edi, word [bp + 6]        ; ptr to emufs table
+    movzx esi, word [bp + 8]        ; ptr to file name
+
+.filename_loop:
+    mov cx, emufs_filename_len
+    repe cmpsb
+    jecxz .file_found
+
+.file_found:
+    mov bx, [bp + 4]                ; ptr to return struct
+    mov [bx], byte 1                     ; file found
+    inc bx
+
+    mov eax, [di]                    ; file offset
+    mov [bx], dword eax
+
+    add bx, 4
+    add edi, 4
+
+    mov eax, [di]
+    mov [bx], dword eax
 
 .shutdown:
+    add sp, 12                      ; free local variable space
+    add sp, 6                       ; free arg stack
 
-    add sp, 6               ; free arg stack
+    mov ebx, [bp - 12]              ; restore ebx
+    mov edi, [bp - 8]               ; restore edi
+    mov esi, [bp - 4]               ; restore esi
+
+    movzx eax, word [bp + 4]        ; ptr to return struct
 
     leave
     ret
@@ -108,26 +144,28 @@ main:
     
     cld
 
-    mov sp, 0x7c00      ; init stack pointer to the code start
+    mov sp, 0x7c00                      ; init stack pointer to the code start
     
-    ; sp - 8 = filename_details  struct
-    sub sp, 8           ; allocate local variable space
+    ; sp - 9 = filename_details  struct
+    ; sp - 10 = 1 byte padding to make it an even number
+    sub sp, 10                          ; allocate local variable space
 
     ; Load the emufs table to 0x7e00
     ; Calculate the number of sectors to load.
     ; Divide the emufs table size by the size of 1 sector
     xor dx, dx
-    mov ax, emufs_table_size       ; Size in bytes of the emufs table to load
-    mov cx, sector_size            ; Size in bytes of 1 sector
-    div cx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    mov ax, emufs_table_size            ; Size in bytes of the emufs table to load
+    mov cx, sector_size                 ; Size in bytes of 1 sector
+    div cx                              ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
-    push word 0x7e00                     ; the dest mem addr
-    push ax                        ; the number of sectors to load
-    push word 2                          ; the sector number to start from
+    push word 0x7e00                    ; the dest mem addr
+    push ax                             ; the number of sectors to load
+    push word 2                         ; the sector number to start from
     call load_sectors
 
     push kernel_filename                ; ptr to filename
     push word 0x7e00                    ; ptr to emufs table
+    push sp
     call get_filename_details
 
     cmp al, 0x1
@@ -175,6 +213,7 @@ main:
 .load_sectors:
     call load_sectors
 
+    add sp, 10              ; free local variable space
     jmp 0:0x8000          ; far jump to kernel. far jump resets the segment registers
 
     jmp .halt
@@ -186,13 +225,16 @@ main:
     jmp .halt
 
 .halt:
-    add sp, 8               ; free local variable space
+    add sp, 10              ; free local variable space
     cli
     hlt
 
 emufs_filename_len equ 10          ; table entry has 10 bytes for filename
 emufs_table_size equ 512
+emufs_table_entry_size equ 18
+emufs_max_table_entry_count equ emufs_table_size / emufs_table_entry_size
 sector_size equ 512
+emufs_table_sector_count equ emufs_table_size / sector_size
 
 kernel_filename: db 'kernel.bin'
 kernel_not_found: db 'kernel not found...', 0x0a, 0x0d, 0
