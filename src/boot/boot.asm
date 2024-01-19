@@ -7,9 +7,96 @@ bits 16
 start:
     jmp main
 
-%include "./src/io/load_sectors_16.asm"
-%include "./src/io/get_filename_details_16.asm"
+; %include "./src/io/load_sectors_16.asm"
+; %include "./src/io/get_filename_details_16.asm"
 %include "./src/prints/print_string_boot.asm"
+
+; struct filename_details
+; { 
+;   file_found: 1 if file found, 0 otherwise
+;   file_offset: word
+;   file_size: dword    
+; }
+
+; arg0: ptr to return struct                    ebp + 4
+; arg1: ptr to file name                        ebp + 6
+; arg2: ptr to emufs table                      ebp + 8
+;
+; ret: addr to the struct obj passed by caller ax
+get_filename_details:
+    push bp
+    mov bp, sp
+
+
+.shutdown:
+
+    add sp, 6               ; free arg stack
+
+    leave
+    ret
+
+; arg0: first sector number to read from        ebp + 4
+; arg1: number of sectors to read               ebp + 6
+; arg2: mem addr to load sectors to             ebp + 8
+load_sectors:
+    push bp
+    mov bp, sp
+
+    ; bp - 4 = edi
+    ; bp - 11 = file_name_details struct
+    ; bp - 12 = 1 byte padding to make it an even number
+    sub sp, 12              ; allocate locate variable space
+
+    mov [bp - 2], edi      ; save di
+
+    mov dx, 0x1f6
+    mov al, 0xa0
+    out dx, al
+
+    mov dx, 0x1f2
+    movzx eax, byte [bp + 6]              ; the number of sectors to read
+    out dx, al
+
+    mov dx, 0x1f3
+    movzx eax, byte [bp + 4]              ; the first sector number to read
+    out dx, al
+
+    mov dx, 0x1f4
+    xor al, al              ; high cylinder value 0
+    out dx, al
+
+    mov dx, 0x1f5
+    xor al, al              ; Low cylinder value 0
+    out dx, al
+
+    mov dx, 0x1f7
+    mov al, 0x20            ; 0x20 for read operation
+    out dx, al
+
+    movzx edi, word [bp + 8]     ; the mem addr to copy to
+
+.sector_loop:
+
+.loop:
+    in al, dx
+    test al, 8
+    je .loop
+
+    mov cx, 256             ; 256 words in a sector
+    mov dx, 0x1f0
+    rep insw
+
+    dec word [bp + 6]       ; number of sectors
+    jnz .sector_loop
+
+.shutdown:
+    add sp, 12              ; free local variable space
+    add sp, 6              ; free arg stack
+
+    movzx edi, word [bp - 2]      ; restore di
+
+    leave
+    ret
 
 main:
     mov ax, 0
@@ -22,25 +109,25 @@ main:
     cld
 
     mov sp, 0x7c00      ; init stack pointer to the code start
+    
+    ; sp - 8 = filename_details  struct
+    sub sp, 8           ; allocate local variable space
 
     ; Load the emufs table to 0x7e00
     ; Calculate the number of sectors to load.
     ; Divide the emufs table size by the size of 1 sector
-    xor edx, edx
-    mov eax, emufs_table_size       ; Size in bytes of the emufs table to load
-    mov ecx, sector_size            ; Size in bytes of 1 sector
-    div ecx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    xor dx, dx
+    mov ax, emufs_table_size       ; Size in bytes of the emufs table to load
+    mov cx, sector_size            ; Size in bytes of 1 sector
+    div cx                         ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
-    mov bl, 2           ; number of the sector to start from, for load_sectors
-    mov cx, ax          ; move the sector count to bx, for load_sectors
-
-    mov di, 0x7e00      ; the data will be copied to es:di - 0:0x7e00
-
-    push di
+    push word 0x7e00                     ; the dest mem addr
+    push ax                        ; the number of sectors to load
+    push word 2                          ; the sector number to start from
     call load_sectors
-    pop di
 
-    mov si, kernel_filename
+    push kernel_filename                ; ptr to filename
+    push word 0x7e00                    ; ptr to emufs table
     call get_filename_details
 
     cmp al, 0x1
@@ -99,6 +186,7 @@ main:
     jmp .halt
 
 .halt:
+    add sp, 8               ; free local variable space
     cli
     hlt
 
