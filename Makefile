@@ -21,14 +21,16 @@ floppy_image: $(BUILD_DIR)/main_floppy.img
 $(BUILD_DIR)/main_floppy.img: boot kernel tools
 	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img count=28800
 	dd if=$(BUILD_DIR)/boot.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Chip8Logo
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/IBMLogo
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Corax+
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Flags
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Quirks
-	$(BUILD_DIR)/emufs_copy $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Keypad
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Chip8Logo
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/IBMLogo
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Corax+
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Flags
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Quirks
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(ROM_DIR)/Keypad
 	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/a.bin
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/b.bin
+	$(BUILD_DIR)/emufs_copy.py $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/c.bin
 
 boot: $(BUILD_DIR)/boot.bin
 
