@@ -11,6 +11,59 @@ start:
 ; %include "./src/io/get_filename_details_16.asm"
 %include "./src/prints/print_string_boot.asm"
 
+; arg0: ptr to filename_details struct      bp + 4
+; arg1: mem addr for kernel to be loaded        bp + 6
+;
+; ret: 1 if successfully loaded, 0 otherwise    ax
+load_kernel_to_mem:
+    push bp
+    mov bp, sp
+
+    ; bp - 2 = return value
+    ; bp - 4 = bx
+    ; bp - 6 = num sectors
+    sub sp, 6                      ; allocate local variable space
+
+    mov word [bp - 2], 1            ; return value
+    mov [bp - 4], bx                ; save bx
+
+    mov bx, [bp + 4]                ; ptr to filename_details struct
+    add bx, 5                       ; jump over file_found and file_offset 
+
+    mov eax, [bx]                   ; file_size in eax
+    mov cx, sector_size
+    xor dx, dx
+    div cx
+
+    cmp dx, 0                      ; if edx != 0, it will be between 0 and 512, so load 1 more sector
+    je .calculate_start_sector
+
+    inc ax
+
+.calculate_start_sector:
+    mov [bp - 6], ax                ; num sectors
+    
+    sub bx, 4                       ; file offset
+    mov ax, [bx]                    ; file offset
+
+    mov cx, sector_size
+    xor dx, dx
+    div cx                          ; start sector in ax
+
+    inc ax
+
+    push word 0x8000
+    push word [bp - 6]              ; num sectors
+    push ax                         ; start sector
+    call load_sectors
+
+.shutdown:
+    mov bx, [bp - 6]                ; restore bx
+    mov ax, [bp - 2]                ; return value
+
+    leave
+    ret 4
+
 ; struct filename_details
 ; { 
 ;   file_found: byte 1 if file found, 0 otherwise
@@ -27,112 +80,113 @@ get_filename_details:
     push bp
     mov bp, sp
 
-    ; sp - 4 = esi
-    ; sp - 8 = edi
-    ; sp - 12 = ebx
-    sub sp, 12                      ; allocate local variable space
+    ; sp - 2 = esi
+    ; sp - 4 = edi
+    ; sp - 6 = ebx
+    sub sp, 6                      ; allocate local variable space
 
-    mov [bp - 4], esi               ; save esi
-    mov [bp - 8], edi               ; save edi
-    mov [bp - 12], ebx              ; save ebx
+    mov [bp - 2], si               ; save si
+    mov [bp - 4], di               ; save di
+    mov [bp - 6], bx              ; save bx
 
-    movzx edi, word [bp + 6]        ; ptr to emufs table
-    movzx esi, word [bp + 8]        ; ptr to file name
+    mov di, [bp + 6]        ; ptr to emufs table
+    mov si, [bp + 8]        ; ptr to file name
 
+    xor ecx, ecx
 .filename_loop:
     mov cx, emufs_filename_len
     repe cmpsb
-    jecxz .file_found
+
+    jcxz .file_found
+
+.file_not_found:
+    mov bp, [bp + 4]                ; ptr to return struct
+    mov [bx], byte 0                ; file not found
+
+    jmp .shutdown
 
 .file_found:
     mov bx, [bp + 4]                ; ptr to return struct
-    mov [bx], byte 1                     ; file found
-    inc bx
+    mov [bx], byte 1                ; file found
 
-    mov eax, [di]                    ; file offset
+    inc bx                          ; point to file offset
+
+    mov eax, [di]                   ; file offset
     mov [bx], dword eax
 
-    add bx, 4
-    add edi, 4
+    add bx, 4                       ; point to file size
+    add di, 4                      ; point to file size
 
-    mov eax, [di]
+    mov eax, [di]                   ; file size
     mov [bx], dword eax
 
 .shutdown:
-    add sp, 12                      ; free local variable space
-    add sp, 6                       ; free arg stack
+    mov bx, [bp - 6]              ; restore bx
+    mov di, [bp - 4]               ; restore di
+    mov si, [bp - 2]               ; restore si
 
-    mov ebx, [bp - 12]              ; restore ebx
-    mov edi, [bp - 8]               ; restore edi
-    mov esi, [bp - 4]               ; restore esi
-
-    movzx eax, word [bp + 4]        ; ptr to return struct
+    mov ax, [bp + 4]        ; ptr to return struct
 
     leave
-    ret
+    ret 6
 
-; arg0: first sector number to read from        ebp + 4
-; arg1: number of sectors to read               ebp + 6
-; arg2: mem addr to load sectors to             ebp + 8
+; arg0: first sector number to read from        bp + 4
+; arg1: number of sectors to read               bp + 6
+; arg2: mem addr to load sectors to             bp + 8
 load_sectors:
     push bp
     mov bp, sp
 
-    ; bp - 4 = edi
-    ; bp - 11 = file_name_details struct
-    ; bp - 12 = 1 byte padding to make it an even number
-    sub sp, 12              ; allocate locate variable space
+    ; bp - 2 = di
+    sub sp, 2                       ; allocate locate variable space
 
-    mov [bp - 2], edi      ; save di
+    mov [bp - 2], di               ; save edi
 
     mov dx, 0x1f6
     mov al, 0xa0
     out dx, al
 
     mov dx, 0x1f2
-    movzx eax, byte [bp + 6]              ; the number of sectors to read
+    movzx eax, word [bp + 6]        ; the number of sectors to read
     out dx, al
 
     mov dx, 0x1f3
-    movzx eax, byte [bp + 4]              ; the first sector number to read
+    movzx eax, word [bp + 4]        ; the first sector number to read
     out dx, al
 
     mov dx, 0x1f4
-    xor al, al              ; high cylinder value 0
+    xor al, al                      ; high cylinder value 0
     out dx, al
 
     mov dx, 0x1f5
-    xor al, al              ; Low cylinder value 0
+    xor al, al                      ; Low cylinder value 0
     out dx, al
 
     mov dx, 0x1f7
-    mov al, 0x20            ; 0x20 for read operation
+    mov al, 0x20                    ; 0x20 for read operation
     out dx, al
 
-    movzx edi, word [bp + 8]     ; the mem addr to copy to
-
-.sector_loop:
+    mov di, [bp + 8]                ; the mem addr to copy to
 
 .loop:
     in al, dx
     test al, 8
     je .loop
 
-    mov cx, 256             ; 256 words in a sector
+    mov cx, 256                     ; 256 words in a sector
     mov dx, 0x1f0
     rep insw
 
-    dec word [bp + 6]       ; number of sectors
-    jnz .sector_loop
+    dec word [bp + 6]               ; number of sectors
+    jnz .loop
 
 .shutdown:
-    add sp, 12              ; free local variable space
-    add sp, 6              ; free arg stack
 
-    movzx edi, word [bp - 2]      ; restore di
+    mov di, [bp - 2]                ; restore di
 
     leave
-    ret
+
+    ret 6
 
 main:
     mov ax, 0
@@ -145,9 +199,10 @@ main:
     cld
 
     mov sp, 0x7c00                      ; init stack pointer to the code start
+    mov bp, sp
     
-    ; sp - 9 = filename_details  struct
-    ; sp - 10 = 1 byte padding to make it an even number
+    ; bp - 9 = filename_details  struct
+    ; bp - 10 = 1 byte padding to make it an even number
     sub sp, 10                          ; allocate local variable space
 
     ; Load the emufs table to 0x7e00
@@ -158,6 +213,7 @@ main:
     mov cx, sector_size                 ; Size in bytes of 1 sector
     div cx                              ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
 
+    mov edi, 0xdeadbabe
     push word 0x7e00                    ; the dest mem addr
     push ax                             ; the number of sectors to load
     push word 2                         ; the sector number to start from
@@ -165,10 +221,12 @@ main:
 
     push kernel_filename                ; ptr to filename
     push word 0x7e00                    ; ptr to emufs table
-    push sp
+    mov ax, bp
+    sub ax, 9                           ; ptr to filename_details struct
+    push ax
     call get_filename_details
 
-    cmp al, 0x1
+    cmp byte [bp - 9], 1                ; file found ?
     je .file_found
     jmp .file_not_found
 
@@ -176,47 +234,20 @@ main:
     ; Load the kernel data to 0x8000
     ; Calculate the number of sectors to load
 
-.calculate_num_sectors:
-    ; cx contains the size of the file,
-    xor dx, dx
-    xor ax, ax
+    push word 0x8000
+    mov ax, bp
+    sub ax, 9                           ; ptr to filename_details struct
+    push ax
+    call load_kernel_to_mem
 
-    mov ax, cx            ; move the size of the file to ax
-    mov cx, sector_size
-    div cx                 ; always divides the value in edx:eax by the operand. quotient in eax, remainder in edx
+    cmp eax, 0                          ; did kernel load fail ?
+    je .halt
 
-    cmp dx, 0
-    je .calculate_start_sector
-
-    inc ax                 ; Assumption is if dx is not 0, it will be between 0 and 512, so need to load one more sector
-
-.calculate_start_sector:
-    push ax                ; push number of sectors to load for later use
-
-    ; calculate the start sector number to load
-    ; (offset of the file / the size of 1 sector) + 1
-    xor dx, dx
-    xor ax, ax
-
-    mov ax, bx            ; move the offset of the file to ax
-    mov cx, sector_size
-    div cx                 ; always divides the value in dx:ax by the operand. quotient in ax, remainder in dx
-
-    inc ax                 ; + 1
-
-    mov bx, ax            ; move start sector to ebx for load_sectors
-    pop ax                ; get back the number of sectors
-    mov cx, ax            ; move the number of sectors to ecx for load_sectors
-
-    mov di, 0x8000        ; load the file data to 0x8000
-
-.load_sectors:
-    call load_sectors
-
-    add sp, 10              ; free local variable space
-    jmp 0:0x8000          ; far jump to kernel. far jump resets the segment registers
+    leave
+    jmp 0:0x8000
 
     jmp .halt
+
 
 .file_not_found:
     mov si, kernel_not_found
@@ -225,7 +256,8 @@ main:
     jmp .halt
 
 .halt:
-    add sp, 10              ; free local variable space
+    leave
+
     cli
     hlt
 
