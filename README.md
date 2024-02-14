@@ -1,5 +1,7 @@
 # EMU OS
 
+***Revamp branch contains WIP (booting, and loading and executing the kernel) code following the `__stdcall` calling convention***
+
 An operating system written from scratch to run the Chip8 apps and later, the NES apps.
 
 It uses only x86 assembly language, and currently runs in 16 bit real mode only. However, the `scratch` folder contains working code to jump to 32 bit protected mode, setting up the VESA bios extensions, and setting up and drawing font glyphs to the screen.
